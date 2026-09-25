@@ -6,13 +6,14 @@
     <meta name="theme-color" content="#020617">
     <title>Sewa Kamera & Jasa Fotografer</title>
     
-    <!-- Optimasi Koneksi ke Server CDN -->
+    <!-- Optimasi Koneksi ke Server CDN (Mempercepat Loading di HP) -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com" />
     <link rel="preconnect" href="https://unpkg.com" />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
+    <!-- Menambahkan 'defer' agar script tidak memblokir render UI pertama (Sangat Penting untuk Android) -->
     <script defer src="https://cdn.tailwindcss.com"></script>
     <script defer crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script defer crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -23,21 +24,36 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
         .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+        
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .overflow-y-auto { -webkit-overflow-scrolling: touch; }
-        .custom-scrollbar { -webkit-overflow-scrolling: touch; }
+
+        /* Membuat scroll momentum mulus di iPhone tanpa membuat layar terkunci */
+        .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .custom-scrollbar {
+            -webkit-overflow-scrolling: touch;
+        }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(30, 41, 59, 0.5); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 1); }
+        
         @keyframes slideUpFade { 0% { transform: translateY(100%); opacity: 0.5; } 100% { transform: translateY(0); opacity: 1; } }
         .animate-slideUp { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn { animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        /* Animasi Loading Native (Ringan, langsung muncul di HP tanpa menunggu React) */
         .native-loader-container { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #020617; z-index: 9999; }
         .native-spinner { width: 50px; height: 50px; border: 4px solid rgba(16, 185, 129, 0.2); border-left-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -46,32 +62,33 @@
 </head>
 <body class="bg-slate-950 text-slate-100 selection:bg-emerald-500/30 min-h-screen relative antialiased">
     <div class="fixed inset-0 z-[-1] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.15),rgba(0,0,0,0))] pointer-events-none"></div>
+    
     <div id="root">
+        <!-- Loader HTML Murni: Tampil instan di HP sebelum React/Babel selesai memproses data besar -->
         <div class="native-loader-container">
             <div class="native-spinner"></div>
             <div class="native-text">MEMUAT SISTEM...</div>
-            <div style="color: #475569; font-size: 10px; margin-top: 10px; font-weight: 600;">Menghubungkan ke Database</div>
+            <div style="color: #475569; font-size: 10px; margin-top: 10px; font-weight: 600;">Mengoptimalkan untuk perangkat Anda</div>
         </div>
     </div>
 
+    <!-- Menghapus preset react-classic dan memakai bawaan react standar -->
     <script type="text/babel" data-presets="react,env">
         const { useState, useEffect, useRef } = React;
 
-        // =========================================================================
-        // 1. MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-        // =========================================================================
-        const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycby5hT4A9D3QhH35w71d3eD33_xxxxxxxxxxxx/exec"; // Ganti URL ini nanti
-        
-        // =========================================================================
-        // 2. KATA SANDI ADMIN (Untuk akses Vercel URL ?admin=kata_sandi)
-        // =========================================================================
-        const ADMIN_SECRET_PASSWORD = "buka_admin"; 
-
-
         const EQUIPMENT_CATEGORIES = {
-          "Kamera": ["CANON EOS 6D", "Canon Eos 600D", "Canon Eos 1300D", "Canon Eos 1200D (Unit 1)", "Canon Eos 1200D (Unit 2)", "Canon Eos 1200D (Unit 3)", "Nikon D5200"],
-          "Lensa": ["Lensa Fix STM 50mm f1.8 Canon", "Lensa Fix Nikkor 50mm f1.8 Nikon", "Lensa Tele Canon 75-300mm USM", "Lensa Tele Nikon 55-200mm", "Lensa KIT 18-55mm (Unit 1)", "Lensa KIT 18-55mm (Unit 2)", "Lensa KIT 18-55mm (Unit 3)", "Lensa KIT 18-55mm (Unit 4)", "Lensa KIT 18-55mm (Unit 5)", "Lensa KIT 18-55mm (Unit 6)", "Lensa KIT 18-55mm (Unit 7)"],
-          "Aksesoris": ["Tripod Beike", "Flash YongNuo III", "Trigger Flash", "Stabilizer HP", "Mic Wireless HP", "+BATERAI CANON", "+BATERAI NIKON"]
+          "Kamera": [
+            "CANON EOS 6D", "Canon Eos 600D", "Canon Eos 1300D", 
+            "Canon Eos 1200D (Unit 1)", "Canon Eos 1200D (Unit 2)", "Canon Eos 1200D (Unit 3)", "Nikon D5200"
+          ],
+          "Lensa": [
+            "Lensa Fix STM 50mm f1.8 Canon", "Lensa Fix Nikkor 50mm f1.8 Nikon", "Lensa Tele Canon 75-300mm USM", "Lensa Tele Nikon 55-200mm",
+            "Lensa KIT 18-55mm (Unit 1)", "Lensa KIT 18-55mm (Unit 2)", "Lensa KIT 18-55mm (Unit 3)", "Lensa KIT 18-55mm (Unit 4)",
+            "Lensa KIT 18-55mm (Unit 5)", "Lensa KIT 18-55mm (Unit 6)", "Lensa KIT 18-55mm (Unit 7)"
+          ],
+          "Aksesoris": [
+            "Tripod Beike", "Flash YongNuo III", "Trigger Flash", "Stabilizer HP", "Mic Wireless HP", "+BATERAI CANON", "+BATERAI NIKON"
+          ]
         };
 
         const DEFAULT_PRICING = {
@@ -102,15 +119,108 @@
           "+BATERAI NIKON": { 4: 15000, 6: 20000, 12: 25000, 24: 30000 }
         };
 
+        // Data awal Katalog Fotografer Dinamis (Default jika tidak ada di DB)
         const INITIAL_DYNAMIC_PACKAGES = [
-            { id: "w1", category: "Foto Wisuda", name: "Paket 1", price: 250000, details: ["1 Fotografer", "Durasi 1 Jam", "Unlimited Photoshot", "10 File Edit", "Include Foto Bersama", "File Dikirim Via GDrive"] },
-            { id: "w2", category: "Foto Wisuda", name: "Paket 2", price: 400000, details: ["1 Fotografer", "Durasi 2 Jam", "Unlimited Photoshot", "15 File Edit", "Include Foto Bersama", "File Dikirim Via GDrive"] },
-            { id: "w3", category: "Foto Wisuda", name: "Paket 3", price: 750000, details: ["1 Fotografer", "Durasi 3 - 4 Jam", "Unlimited Photoshot", "20 File Edit", "File Dikirim Via GDrive"] },
-            { id: "w4", category: "Foto Wisuda", name: "Paket 4", price: 1300000, details: ["2 Fotografer", "Durasi 5 - 6 Jam", "Unlimited Photoshot", "30 File Edit", "File Dikirim Via GDrive"] },
-            { id: "wd1", category: "Foto Wedding", name: "Paket 1", price: 500000, details: ["1 Fotografer", "Durasi 2 Jam", "Unlimited Photoshot", "10 File Edit", "File Dikirim Via GDrive"] },
-            { id: "wd2", category: "Foto Wedding", name: "Paket 2", price: 950000, details: ["1 Fotografer", "Durasi 3-4 Jam", "Unlimited Photoshot", "15 File Edit", "File Dikirim Via GDrive"] },
-            { id: "wd3", category: "Foto Wedding", name: "Paket 3", price: 750000, details: ["1 Fotografer", "Durasi 3 - 4 Jam", "Unlimited Photoshot", "20 File Edit", "File Dikirim Via GDrive"] },
-            { id: "wd4", category: "Foto Wedding", name: "Paket 4", price: 1500000, details: ["2 Fotografer", "Durasi 5 - 6 Jam", "Unlimited Photoshot", "30 File Edit", "File Dikirim Via GDrive"] }
+            {
+                id: "w1", category: "Foto Wisuda", name: "Paket 1", price: 250000,
+                details: ["1 Fotografer", "Durasi 1 Jam", "Unlimited Photoshot", "10 File Edit", "Include Foto Bersama", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "w2", category: "Foto Wisuda", name: "Paket 2", price: 400000,
+                details: ["1 Fotografer", "Durasi 2 Jam", "Unlimited Photoshot", "15 File Edit", "Include Foto Bersama", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "w3", category: "Foto Wisuda", name: "Paket 3", price: 750000,
+                details: ["1 Fotografer", "Durasi 3 - 4 Jam", "Unlimited Photoshot", "20 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "w4", category: "Foto Wisuda", name: "Paket 4", price: 1300000,
+                details: ["2 Fotografer", "Durasi 5 - 6 Jam", "Unlimited Photoshot", "30 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "wd1", category: "Foto Wedding", name: "Paket 1", price: 500000,
+                details: ["1 Fotografer", "Durasi 2 Jam", "Unlimited Photoshot", "10 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "wd2", category: "Foto Wedding", name: "Paket 2", price: 950000,
+                details: ["1 Fotografer", "Durasi 3-4 Jam", "Unlimited Photoshot", "15 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "wd3", category: "Foto Wedding", name: "Paket 3", price: 750000,
+                details: ["1 Fotografer", "Durasi 3 - 4 Jam", "Unlimited Photoshot", "20 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "wd4", category: "Foto Wedding", name: "Paket 4", price: 1500000,
+                details: ["2 Fotografer", "Durasi 5 - 6 Jam", "Unlimited Photoshot", "30 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "da1", category: "Dokumentasi Acara", name: "Paket 1", price: 250000,
+                details: ["1 Fotografer", "Durasi 60 Menit", "Unlimited Photoshot", "10 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "da2", category: "Dokumentasi Acara", name: "Paket 2", price: 450000,
+                details: ["1 Fotografer", "Durasi 2 Jam", "Unlimited Photoshot", "15 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "da3", category: "Dokumentasi Acara", name: "Paket 3", price: 500000,
+                details: ["1 Fotografer", "Durasi 3 - 4 Jam", "Unlimited Photoshot", "20 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "pwk1", category: "Foto Prewedding (Dalam Kota)", name: "Paket 1", price: 300000,
+                details: ["1 Fotografer (Durasi 1 Jam)", "Unlimited Photoshot", "10 File Edit", "1 Lokasi", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "pwk2", category: "Foto Prewedding (Dalam Kota)", name: "Paket 2", price: 500000,
+                details: ["1 Fotografer (Durasi 2 Jam)", "Unlimited Photoshot", "15 File Edit", "1 Lokasi", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "pwk3", category: "Foto Prewedding (Dalam Kota)", name: "Paket 3", price: 750000,
+                details: ["1 Fotografer (Durasi 3-4 Jam)", "Unlimited Photoshot", "20 File Edit", "1 Lokasi", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "pwk4", category: "Foto Prewedding (Dalam Kota)", name: "Paket 4", price: 1000000,
+                details: ["1 Fotografer (Durasi 5-6 Jam)", "Unlimited Photoshot", "30 File Edit", "2 Lokasi", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "pwo1", category: "Prewedding (Outdoor / Wisata)", name: "Paket 1", price: 350000,
+                details: ["1 Fotografer", "Durasi 1 Jam", "Unlimited Photoshot", "10 File Edit", "1 Lokasi", "HTM Ditanggung Klien", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "pwo2", category: "Prewedding (Outdoor / Wisata)", name: "Paket 2", price: 550000,
+                details: ["1 Fotografer", "Durasi 2 Jam", "Unlimited Photoshot", "15 File Edit", "1 Lokasi", "HTM Ditanggung Klien", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "pwo3", category: "Prewedding (Outdoor / Wisata)", name: "Paket 3", price: 800000,
+                details: ["1 Fotografer", "Durasi 3 - 4 Jam", "Unlimited Photoshot", "20 File Edit", "1 Lokasi", "HTM Ditanggung Klien", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "pwo4", category: "Prewedding (Outdoor / Wisata)", name: "Paket 4", price: 1100000,
+                details: ["1 Fotografer", "Durasi 5 - 6 Jam", "Unlimited Photoshot", "30 File Edit", "2 Lokasi", "HTM Ditanggung Klien", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "lp1", category: "Foto Liburan & Piknik", name: "Paket 1", price: 250000,
+                details: ["1 Fotografer", "Durasi 60 menit", "Unlimited Photoshot", "10 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "lp2", category: "Foto Liburan & Piknik", name: "Paket 2", price: 400000,
+                details: ["1 Fotografer", "Durasi 2 Jam", "Unlimited Photoshot", "15 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "lp3", category: "Foto Liburan & Piknik", name: "Paket 3", price: 500000,
+                details: ["1 Fotografer", "Durasi 3 - 4 Jam", "Unlimited Photoshot", "15 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "fg1", category: "Foto Grup / Bersama", name: "Paket 1", price: 550000,
+                details: ["1 Fotografer", "3-4 Orang", "Durasi 30 menit / Orang", "Durasi 15 Menit Foto Grup", "Unlimited Photoshot", "20 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "fg2", category: "Foto Grup / Bersama", name: "Paket 2", price: 650000,
+                details: ["1 Fotografer", "5 Orang", "Durasi 30 menit / Orang", "Durasi 15 Menit Foto Grup", "Unlimited Photoshot", "30 File Edit", "File Dikirim Via GDrive"]
+            },
+            {
+                id: "fg3", category: "Foto Grup / Bersama", name: "Paket 3", price: 990000,
+                details: ["1 Fotografer", "6-8 Orang", "Durasi 30 menit / Orang", "Durasi 20 Menit Foto Grup", "Unlimited Photoshot", "40 File Edit", "File Dikirim Via GDrive"]
+            }
         ];
 
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
@@ -129,16 +239,33 @@
             if (h < 22) TIME_OPTIONS.push(`${hourStr}:30`);
         }
 
+        // --- KONFIGURASI INVENTARIS BATERAI ---
         const CAMERA_BATTERY_MAP = {
-            "Canon Eos 600D": "BAT_600D", "Canon Eos 1200D (Unit 1)": "BAT_1200D", "Canon Eos 1200D (Unit 2)": "BAT_1200D",
-            "Canon Eos 1200D (Unit 3)": "BAT_1200D", "Canon Eos 1300D": "BAT_1200D", "CANON EOS 6D": "BAT_6D", "Nikon D5200": "BAT_NIKON"
+            "Canon Eos 600D": "BAT_600D",
+            "Canon Eos 1200D (Unit 1)": "BAT_1200D",
+            "Canon Eos 1200D (Unit 2)": "BAT_1200D",
+            "Canon Eos 1200D (Unit 3)": "BAT_1200D",
+            "Canon Eos 1300D": "BAT_1200D",
+            "CANON EOS 6D": "BAT_6D",
+            "Nikon D5200": "BAT_NIKON"
         };
 
-        const isCamera6D = (itemName) => itemName && itemName.toUpperCase().includes("6D");
+        // Helper untuk mengecek apakah suatu item adalah kamera seri 6D
+        const isCamera6D = (itemName) => {
+            if (!itemName) return false;
+            // Mengecek apakah string mengandung '6D' dan tidak sensitif terhadap huruf besar/kecil
+            return itemName.toUpperCase().includes("6D");
+        };
 
-        const BATTERY_LIMITS = { "BAT_600D": 2, "BAT_1200D": 4, "BAT_6D": 2, "BAT_NIKON": 2 };
+        const BATTERY_LIMITS = {
+            "BAT_600D": 2,
+            "BAT_1200D": 4, // 1200D & 1300D tipe sama
+            "BAT_6D": 2,
+            "BAT_NIKON": 2  // D3200 & D5200 tipe sama
+        };
 
         const getItemPrice = (itemName, hours, hasCamera, activePricing, dynamicPackages) => {
+            // Cek apakah item adalah paket dinamis (mencari berdasarkan gabungan category dan name)
             const dynamicItem = dynamicPackages.find(p => `${p.category} - ${p.name}` === itemName);
             if (dynamicItem) return dynamicItem.price;
 
@@ -163,7 +290,9 @@
             }
             
             const isFixOrTele = itemName.toLowerCase().includes("fix") || itemName.toLowerCase().includes("tele");
-            if (isFixOrTele && hasCamera && hours >= 24) { total = Math.max(0, total - 10000); }
+            if (isFixOrTele && hasCamera && hours >= 24) {
+                total = Math.max(0, total - 10000);
+            }
             return total;
         };
 
@@ -180,10 +309,13 @@
             const rawTotal = equips.reduce((sum, item) => {
                 let price = getItemPrice(item, duration, hasCamera, activePricing, dynamicPackages);
                 const isPromoLens = item.includes("Lensa Fix STM 50mm f1.8 Canon") || item.includes("Lensa Tele Canon 75-300mm USM");
-                if (has6D && isPromoLens && selectedPromoLenses[0] === item) { price = 0; }
+                if (has6D && isPromoLens && selectedPromoLenses[0] === item) {
+                    price = 0; 
+                }
                 return sum + price;
             }, 0);
             
+            // Periksa murni fotografer (bukan alat)
             const dynamicNames = dynamicPackages.map(p => `${p.category} - ${p.name}`);
             const isFotograferOnly = equips.some(item => dynamicNames.includes(item)) && !equips.some(item => !dynamicNames.includes(item));
             
@@ -199,11 +331,7 @@
           const [isLoading, setIsLoading] = useState(true);
           const [isSaving, setIsSaving] = useState(false);
           const [isRefreshing, setIsRefreshing] = useState(false);
-          
-          // =====================================================================
-          // 3. SET DEFAULT KE TRUE. DI VERCEL AKAN OTOMATIS JADI CLIENT MODE
-          // =====================================================================
-          const [isClient, setIsClient] = useState(true); 
+          const [isClient, setIsClient] = useState(false); 
           
           const [showClientSchedule, setShowClientSchedule] = useState(false); 
           const [editingId, setEditingId] = useState(null); 
@@ -237,10 +365,16 @@
           const [showHolidayModal, setShowHolidayModal] = useState(false);
           const [holidayForm, setHolidayForm] = useState({ type: 'date', date: '', day: '0', start: '00:00', end: '23:59', note: '' });
 
+          // --- URL GOOGLE APPS SCRIPT ---
+          // GANTI string di bawah ini dengan URL Web App (berakhiran /exec) yang Anda dapatkan dari Google Apps Script
+          const GAS_API_URL = "https://script.google.com/macros/s/AKfycbySLGQ_z2QXCfGBJ_YEWHYQuGtqDEBrAu_idH1R1PBqL6pg1d4u34Ck3ttMOh8BsMdfvg/exec";
+
+          // State Katalog Dinamis & Equipment Dinamis
           const [dynamicPackages, setDynamicPackages] = useState(INITIAL_DYNAMIC_PACKAGES);
           const [editPackageModal, setEditPackageModal] = useState(null); 
           const [dynamicEquipment, setDynamicEquipment] = useState(EQUIPMENT_CATEGORIES);
           const [addEquipmentModal, setAddEquipmentModal] = useState(null);
+          // const [editEquipmentModal, setEditEquipmentModal] = useState(null); // Removed
 
           const today = new Date();
           const offsetMs = today.getTimezoneOffset() * 60000;
@@ -258,7 +392,21 @@
           }, []);
 
           const initialFormState = { 
-            serviceType: 'kamera', equipment: [], customerName: '', phone: '', address: '', identityGuarantees: [], otherGuarantees: [], startDate: '', startTime: '', endDate: '', endTime: '', notes: '', paymentStatus: 'BAYAR LUNAS', dpAmount: '', discount: ''
+            serviceType: 'kamera',
+            equipment: [], 
+            customerName: '', 
+            phone: '', 
+            address: '', 
+            identityGuarantees: [], 
+            otherGuarantees: [], 
+            startDate: '', 
+            startTime: '', 
+            endDate: '', 
+            endTime: '', 
+            notes: '',
+            paymentStatus: 'BAYAR LUNAS', 
+            dpAmount: '',
+            discount: ''
           };
 
           const [formData, setFormData] = useState(initialFormState);
@@ -266,14 +414,31 @@
           const [success, setSuccess] = useState('');
 
           useEffect(() => {
-            // Cek URL parameter untuk mengaktifkan ADMIN MODE
             const params = new URLSearchParams(window.location.search);
-            if (params.get('admin') === ADMIN_SECRET_PASSWORD) { 
-                setIsClient(false); 
+            // 1. Secara default di Vercel, aplikasi adalah MODE KLIEN
+            let isClientView = true;
+            
+            // 2. Rahasia Akses Admin: Jika di URL ada "?admin=buka", jadikan mode Admin
+            if (params.get('admin') === 'buka') {
+                isClientView = false;
             }
+            
+            setIsClient(isClientView);
           }, []);
 
-          const processFetchedData = (parsedData) => {
+          const loadDataFromBackend = async () => {
+            setIsRefreshing(true);
+            try {
+                // Cek apakah URL sudah diisi dengan link asli
+                if (!GAS_API_URL.startsWith("http")) {
+                    throw new Error("URL API Google belum diisi. Menggunakan penyimpanan lokal sementara.");
+                }
+
+                // Mengambil data dari Google Sheets API via Fetch
+                const response = await fetch(GAS_API_URL);
+                const dataText = await response.text();
+                const parsedData = dataText ? JSON.parse(dataText) : [];
+                
                 let activeCustomPrices = { ...DEFAULT_PRICING };
                 let activeDynamicPackages = INITIAL_DYNAMIC_PACKAGES;
                 let activeDynamicEquipment = { ...EQUIPMENT_CATEGORIES };
@@ -304,7 +469,10 @@
                             hasMissingPrices = true; 
                         }
                     }
-                    if (settings.customPricing) { activeCustomPrices = { ...DEFAULT_PRICING, ...settings.customPricing }; }
+                    
+                    if (settings.customPricing) {
+                        activeCustomPrices = { ...DEFAULT_PRICING, ...settings.customPricing };
+                    }
                 }
                 
                 setDynamicPackages(activeDynamicPackages);
@@ -323,67 +491,36 @@
                 if (hasMissingPrices) {
                     const dataToSave = [...processedBookings];
                     if (settings) dataToSave.push(settings);
-                    // Langsung panggil fungsi modifyData ke API
-                    saveToAPI(dataToSave);
+                    // Simpan perbaikan data ke Sheets jika ada missing prices
+                    if (GAS_API_URL.startsWith("http")) {
+                        fetch(GAS_API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(dataToSave)
+                        }).catch(e => console.error("Update background gagal:", e));
+                    }
                 }
                 setIsLoading(false);
                 setIsRefreshing(false);
-          };
-
-          // =====================================================================
-          // 4. MENGGANTI GOOGLE.SCRIPT.RUN DENGAN FETCH (API CALL)
-          // =====================================================================
-          const loadDataFromBackend = async () => {
-              setIsRefreshing(true);
-              
-              if (!GOOGLE_SCRIPT_API_URL || GOOGLE_SCRIPT_API_URL.includes('xxxxxxxxxxxx')) {
-                  // Fallback Local Storage jika URL API belum diisi
-                  const savedData = localStorage.getItem('jadwalSewaKameraData');
-                  if (savedData) { processFetchedData(JSON.parse(savedData)); } 
-                  else { setIsLoading(false); setIsRefreshing(false); }
-                  return;
-              }
-
-              try {
-                  const response = await fetch(GOOGLE_SCRIPT_API_URL);
-                  const data = await response.json();
-                  processFetchedData(data);
-              } catch (err) {
-                  console.error("Gagal load data dari API", err);
-                  // Fallback ke Local Storage jika offline
-                  const savedData = localStorage.getItem('jadwalSewaKameraData');
-                  if (savedData) { processFetchedData(JSON.parse(savedData)); } 
-                  else { setIsLoading(false); setIsRefreshing(false); }
-              }
+            } catch (error) {
+                console.warn("Peringatan Sistem:", error.message || error);
+                setIsLoading(false);
+                setIsRefreshing(false);
+                // Fallback baca dari localStorage jika internet gagal/offline atau URL belum diset
+                const savedData = localStorage.getItem('jadwalSewaKameraData');
+                if (savedData) {
+                    try {
+                        const parsedData = JSON.parse(savedData);
+                        const processedBookings = parsedData.filter(b => b.id !== 'APP_SETTINGS');
+                        setBookings(processedBookings);
+                    } catch(e) {}
+                }
+            }
           };
 
           useEffect(() => { loadDataFromBackend(); }, []);
 
-          // Fungsi terpisah untuk POST data ke API Web App Google Script
-          const saveToAPI = async (dataToSave) => {
-              // Simpan ke localstorage sebagai backup
-              localStorage.setItem('jadwalSewaKameraData', JSON.stringify(dataToSave));
-
-              if (!GOOGLE_SCRIPT_API_URL || GOOGLE_SCRIPT_API_URL.includes('xxxxxxxxxxxx')) return true;
-
-              try {
-                  const response = await fetch(GOOGLE_SCRIPT_API_URL, {
-                      method: 'POST',
-                      headers: {
-                          // Menggunakan text/plain untuk menghindari CORS Preflight error di browser
-                          'Content-Type': 'text/plain;charset=utf-8',
-                      },
-                      body: JSON.stringify(dataToSave)
-                  });
-                  const result = await response.json();
-                  return result.status === 'success';
-              } catch (err) {
-                  console.error("API POST Error:", err);
-                  throw err;
-              }
-          };
-
-          const modifyData = async (action, payload) => {
+          const modifyData = (action, payload) => {
             return new Promise(async (resolve, reject) => {
                 setIsSaving(true);
                 let updatedBookings;
@@ -397,8 +534,13 @@
                 setBookings(updatedBookings);
                 
                 let finalSettings = { 
-                    id: 'APP_SETTINGS', totalMemoryCards: totalMemory, isHolidayMode: isHolidayMode, holidays: holidays, 
-                    customPricing: customPricing, dynamicPackages: dynamicPackages, dynamicEquipment: dynamicEquipment
+                    id: 'APP_SETTINGS', 
+                    totalMemoryCards: totalMemory, 
+                    isHolidayMode: isHolidayMode, 
+                    holidays: holidays, 
+                    customPricing: customPricing,
+                    dynamicPackages: dynamicPackages,
+                    dynamicEquipment: dynamicEquipment
                 };
                 
                 if (action === 'SETTING_UPDATE') {
@@ -417,13 +559,28 @@
                 const dataToSave = [...updatedBookings, finalSettings];
 
                 try {
-                    await saveToAPI(dataToSave);
+                    // 1. Simpan ke LocalStorage sebagai backup instan
+                    localStorage.setItem('jadwalSewaKameraData', JSON.stringify(dataToSave));
+                    
+                    // 2. Kirim ke Google Sheets API jika URL valid
+                    // Menggunakan text/plain untuk menghindari Preflight CORS error di Fetch
+                    if (GAS_API_URL.startsWith("http")) {
+                        await fetch(GAS_API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify(dataToSave)
+                        });
+                    } else {
+                        console.warn("Mode Offline: Data berhasil disimpan ke memori perangkat (Local Storage).");
+                    }
+                    
                     setIsSaving(false);
                     resolve(true);
                 } catch (err) {
+                    console.error("Gagal menyimpan ke Google Drive:", err);
                     setIsSaving(false);
-                    setError("Gagal menyimpan ke Database Server. Data disimpan sementara di HP.");
-                    resolve(true); // Resolve anyway karena sudah tersimpan di localStorage
+                    setError("Gagal menyimpan ke Server. Pastikan koneksi internet stabil.");
+                    reject(err);
                 }
             });
           };
@@ -443,20 +600,33 @@
               setIsGeneratingPDF(true);
               setPrintingBooking(booking);
               
+              // Tunggu sejenak agar container tampil dan termuat
               setTimeout(async () => {
                   try {
                       const element = document.getElementById('pdf-nota-container');
-                      const canvas = await window.html2canvas(element, { scale: 2, useCORS: true, allowTaint: true, logging: false });
+                      
+                      // Konversi HTML ke Gambar Canvas
+                      const canvas = await window.html2canvas(element, { 
+                          scale: 2, 
+                          useCORS: true, 
+                          allowTaint: true,
+                          logging: false
+                      });
+                      
                       const imgData = canvas.toDataURL('image/png');
                       const { jsPDF } = window.jspdf;
                       
+                      // Kertas A4 (Potrait, milimeter)
                       const pdf = new jsPDF('p', 'mm', 'a4');
                       const pdfWidth = pdf.internal.pageSize.getWidth();
                       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
                       
                       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                      
+                      // Proses Nama File
                       const safeName = booking.customerName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                       pdf.save(`NOTA_${booking.serviceType === 'fotografer' ? 'FOTO' : 'SEWA'}_${safeName}_${booking.id}.pdf`);
+                      
                   } catch (error) {
                       console.error("Gagal membuat PDF:", error);
                       alert("Terjadi kesalahan saat memuat Nota PDF. Pastikan koneksi internet stabil.");
@@ -474,7 +644,9 @@
           };
 
           const checkHolidayConflict = (dateStr, timeStr) => {
+              // --- KODE BARU: Kecualikan Admin dari pengecekan libur ---
               if (!isClient) return null; 
+              // ---------------------------------------------------------
               if (!dateStr || !timeStr) return null;
               if (isHolidayMode && dateStr === todayDateStr) return "Toko sedang tutup darurat hari ini";
               
@@ -504,6 +676,7 @@
             const currentMin = realNow.getMinutes().toString().padStart(2, '0');
             const currentTimeStr = `${currentHour}:${currentMin}`;
             
+            // Bekukan error masa lalu jika klien sudah di tahap konfirmasi/pembayaran agar harga tidak mereset
             if (isClient && (startStr < "05:00" || startStr > "22:00")) timeError = "Jam Ambil harus berada dalam jam operasional (05:00 - 22:00).";
             else if (isClient && !editingId && !clientDraftId && !showConfirmation && !showPayment && formData.startDate === todayDateStr && startStr <= currentTimeStr) timeError = "Waktu tidak boleh di masa lalu (jam sudah lewat).";
             else if (isClient && (endStr < "05:00" || endStr > "22:00")) timeError = "Jam Kembali harus berada dalam jam operasional (05:00 - 22:00).";
@@ -518,6 +691,7 @@
             }
           }
 
+          // Perbaikan: rentalDurationHours dihitung tanpa terpengaruh timeError sesaat agar total Rp aman
           const rentalDurationHours = isTimeSelected ? 
             (new Date(`${formData.endDate}T${formData.endTime}`) - new Date(`${formData.startDate}T${formData.startTime}`)) / (1000 * 60 * 60) : 0;
             
@@ -563,6 +737,7 @@
               return (newStart < existingEnd) && (newEnd > existingStart);
             });
 
+            // --- Hitung Pemakaian Memori Kamera ---
             let events = [];
             overlappingBookings.forEach(booking => {
               const equips = Array.isArray(booking.equipment) ? booking.equipment : [booking.equipment];
@@ -592,6 +767,7 @@
             availableMemory = Math.max(0, totalMemory - usedMemory);
             isMemoryEmpty = availableMemory <= 0;
             
+            // --- Hitung Pemakaian Inventaris Baterai ---
             let batteryEvents = { "BAT_600D": [], "BAT_1200D": [], "BAT_6D": [], "BAT_NIKON": [] };
             
             overlappingBookings.forEach(booking => {
@@ -600,12 +776,15 @@
                 
                 equips.forEach(item => {
                     if (CAMERA_BATTERY_MAP[item]) counts[CAMERA_BATTERY_MAP[item]] += 1;
+                    // Jika ada kamera 6D yang namanya sudah diubah
                     if (isCamera6D(item) && !CAMERA_BATTERY_MAP[item]) counts["BAT_6D"] += 1;
+                    
                     if (item === "+BATERAI NIKON") counts["BAT_NIKON"] += 1;
                     if (item === "+BATERAI CANON") {
+                        // Baterai tambahan canon mengikuti jenis kamera canon yang disewa
                         const canonCam = equips.find(e => CAMERA_BATTERY_MAP[e] && CAMERA_BATTERY_MAP[e] !== "BAT_NIKON");
                         if (canonCam) counts[CAMERA_BATTERY_MAP[canonCam]] += 1;
-                        else counts["BAT_1200D"] += 1; 
+                        else counts["BAT_1200D"] += 1; // Fallback pool terbanyak jika tidak bawa kamera
                     }
                 });
                 
@@ -668,6 +847,9 @@
                   if (editingId && booking.id === editingId) return false;
                   if (clientDraftId && booking.id === clientDraftId) return false;
                   if (booking.status === 'Selesai' || booking.status === 'Batal') return false;
+                  
+                  // JIKA booking memiliki paymentStatus 'BELUM BAYAR' dan status 'Booking' (biasanya dari BAYAR DI TEMPAT Klien)
+                  // Maka anggap TIDAK CONFLICT, agar orang lain tetap bisa booking barang tersebut.
                   if (booking.paymentStatus === 'BELUM BAYAR' && booking.status === 'Booking') return false;
 
                   const isItemRented = Array.isArray(booking.equipment) ? booking.equipment.includes(item) : booking.equipment === item;
@@ -712,6 +894,7 @@
           };
 
           useEffect(() => {
+            // JANGAN hapus isi keranjang jika klien sedang di tahap konfirmasi/pembayaran atau draft
             if (showConfirmation || showPayment || clientDraftId) return;
 
             if (serviceType === 'kamera' && formData.equipment.length > 0 && isTimeSelected && !timeError) {
@@ -762,6 +945,7 @@
               }
 
               if (!isCurrentlySelected && isCamera6D(item)) {
+                  // Mencari nama asli lensa yang terdaftar di dynamicEquipment
                   const allLenses = dynamicEquipment["Lensa"] || [];
                   const fixLensName = allLenses.find(l => l.includes("Lensa Fix STM 50mm f1.8 Canon")) || "Lensa Fix STM 50mm f1.8 Canon";
                   const teleLensName = allLenses.find(l => l.includes("Lensa Tele Canon 75-300mm USM")) || "Lensa Tele Canon 75-300mm USM";
@@ -847,14 +1031,21 @@
             
             const payload = { ...formData, serviceType: serviceType, discount: cleanDiscount, dpAmount: cleanDpAmount, totalPrice: currentTotalCost };
 
+            // --- PENANGANAN KHUSUS KLIEN: BAYAR DI TEMPAT (WAJIB INSTAN) ---
             if (isClient && formData.paymentStatus === 'BELUM BAYAR') {
                 const targetId = clientDraftId || Date.now().toString();
+                
+                // 1. Eksekusi Buka WhatsApp Langsung Seketika (Bypass Popup Blocker HP)
                 triggerWhatsApp(targetId, payload, currentTotalCost);
+                
+                // 2. Simpan Data Secara Latar Belakang (Tanpa Loading Tampilan)
                 modifyData(clientDraftId ? 'UPDATE' : 'ADD', { ...payload, id: targetId, status: 'Booking' })
                     .catch(err => console.error("Error latar belakang:", err));
-                return; 
+                    
+                return; // Hentikan eksekusi di sini agar tidak memicu loading di bawah
             }
 
+            // --- PROSES NORMAL (ADMIN ATAU KLIEN TRANSFER) ---
             try {
                 if (editingId && !isClient) {
                   await modifyData('UPDATE', { ...payload, id: editingId });
@@ -896,8 +1087,10 @@
               const cleanDiscount = Number(formData.discount || 0);
               const payload = { ...formData, serviceType: serviceType, discount: cleanDiscount, dpAmount: cleanDpAmount, totalPrice: currentTotalCost };
               
+              // 1. EKSEKUSI WA SECARA LANGSUNG (Mencegah Layar Blank / Blocker Browser HP)
               triggerWhatsApp(clientDraftId, payload, currentTotalCost);
               
+              // 2. SIMPAN KE DATABASE DI LATAR BELAKANG
               if (clientDraftId) {
                   modifyData('UPDATE', { ...payload, id: clientDraftId, status: 'Booking' })
                       .catch(err => console.error("Abaikan error jaringan klien:", err));
@@ -946,8 +1139,10 @@
               
               const waLink = `https://api.whatsapp.com/send?phone=6282111117260&text=${encodeURIComponent(rawTextWA)}`;
               
+              // BUKA WA LANGSUNG KE TAB BARU AGAR APLIKASI TIDAK BLANK
               window.open(waLink, '_blank');
               
+              // Reset Tampilan Sistem
               setShowPayment(false);
               setShowConfirmation(false);
               setFormData(initialFormState);
@@ -1099,6 +1294,7 @@
                   
                   updatedPackages = dynamicPackages.map(p => p.id === newPackage.id ? newPackage : p);
                   
+                  // Update seluruh pesanan jika nama paket diedit
                   if (oldNameFull !== newNameFull) {
                       needsBulkUpdate = true;
                       updatedBookingsList = bookings.map(b => {
@@ -1135,6 +1331,13 @@
               }
           };
 
+          // --- Removed handleEditEquipmentSave function ---
+          /*
+          const handleEditEquipmentSave = (e) => {
+              // ... existing logic ...
+          };
+          */
+
           const handleAddEquipment = (e) => {
               e.preventDefault();
               const fd = new FormData(e.target);
@@ -1147,41 +1350,61 @@
 
               if (!name) return alert("Nama alat tidak boleh kosong!");
 
+              // Cek duplikasi
               const allCurrentItems = Object.values(dynamicEquipment).flat();
-              if (allCurrentItems.includes(name)) { return alert("Alat dengan nama tersebut sudah ada!"); }
+              if (allCurrentItems.includes(name)) {
+                  return alert("Alat dengan nama tersebut sudah ada!");
+              }
 
+              // Update Equipment List
               const newEquipmentList = { ...dynamicEquipment };
-              if (!newEquipmentList[category]) { newEquipmentList[category] = []; }
+              if (!newEquipmentList[category]) {
+                  newEquipmentList[category] = [];
+              }
               newEquipmentList[category].push(name);
 
+              // Update Pricing
               const newPricing = { ...customPricing, [name]: { 4: p4, 6: p6, 12: p12, 24: p24 } };
 
               setDynamicEquipment(newEquipmentList);
               setCustomPricing(newPricing);
               setPriceForm(prev => ({...prev, [name]: { 4: p4, 6: p6, 12: p12, 24: p24 }}));
               
-              modifyData('SETTING_UPDATE', { dynamicEquipment: newEquipmentList, customPricing: newPricing });
+              modifyData('SETTING_UPDATE', { 
+                  dynamicEquipment: newEquipmentList,
+                  customPricing: newPricing
+              });
+
               setAddEquipmentModal(null);
           };
 
           const handleDeleteEquipment = (category, itemName) => {
               if (confirm(`Yakin ingin menghapus alat "${itemName}" secara permanen? Harga yang terkait juga akan dihapus.`)) {
+                  // Hapus dari Equipment List
                   const newEquipmentList = { ...dynamicEquipment };
                   newEquipmentList[category] = newEquipmentList[category].filter(item => item !== itemName);
                   
-                  if (newEquipmentList[category].length === 0) { delete newEquipmentList[category]; }
+                  // Hapus kategori jika kosong
+                  if (newEquipmentList[category].length === 0) {
+                      delete newEquipmentList[category];
+                  }
 
+                  // Hapus dari Pricing
                   const newPricing = { ...customPricing };
                   delete newPricing[itemName];
 
                   setDynamicEquipment(newEquipmentList);
                   setCustomPricing(newPricing);
                   
+                  // Update state form editor harga agar item langsung hilang
                   const newPriceForm = { ...priceForm };
                   delete newPriceForm[itemName];
                   setPriceForm(newPriceForm);
 
-                  modifyData('SETTING_UPDATE', { dynamicEquipment: newEquipmentList, customPricing: newPricing });
+                  modifyData('SETTING_UPDATE', { 
+                      dynamicEquipment: newEquipmentList,
+                      customPricing: newPricing
+                  });
               }
           };
 
@@ -1308,20 +1531,32 @@
                           booking.status === 'Selesai' ? 'bg-emerald-400 shadow-emerald-500/20' : 'bg-rose-500 shadow-rose-500/20'
                         }`}></div>
 
-                        <div className="p-4 flex flex-col gap-3 cursor-pointer group relative pl-5 sm:pl-6" onClick={() => toggleExpand(booking.id)}>
+                        {/* Card Header (Thumbnail) - Re-layout for Mobile */}
+                        <div 
+                          className="p-4 flex flex-col gap-3 cursor-pointer group relative pl-5 sm:pl-6"
+                          onClick={() => toggleExpand(booking.id)}
+                        >
                           <div className="flex items-start gap-3 sm:gap-4 w-full">
+                            {/* Date Icon */}
                             <div className="w-12 sm:w-14 shrink-0 bg-slate-900 rounded-xl overflow-hidden border border-slate-700/50 shadow-inner flex flex-col items-center group-hover:scale-105 transition-transform duration-300">
-                               <div className="bg-slate-800 text-slate-300 text-[9px] font-black w-full pt-1.5 pb-1 uppercase tracking-widest text-center border-b border-slate-700/50">{calStart.monthName}</div>
-                               <div className="text-white text-xl font-black py-1.5 tracking-tighter">{calStart.dateNum}</div>
+                               <div className="bg-slate-800 text-slate-300 text-[9px] font-black w-full pt-1.5 pb-1 uppercase tracking-widest text-center border-b border-slate-700/50">
+                                  {calStart.monthName}
+                               </div>
+                               <div className="text-white text-xl font-black py-1.5 tracking-tighter">
+                                  {calStart.dateNum}
+                               </div>
                             </div>
 
+                            {/* Right Content Area */}
                             <div className="flex-1 min-w-0 flex flex-col gap-2">
+                              {/* Top Row: Name & Status */}
                               <div className="flex justify-between items-start gap-2">
                                 <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 pr-2">
                                   <span className="font-extrabold text-white text-base break-words leading-tight">{booking.customerName}</span>
                                   {booking.serviceType === 'fotografer' && <span className="bg-indigo-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded border border-indigo-400 shadow-sm uppercase tracking-widest shrink-0">Jasa</span>}
                                 </div>
                                 
+                                {/* Status Dropdown/Badge */}
                                 <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
                                     {!isClient ? (
                                       <div className="relative">
@@ -1347,13 +1582,22 @@
                                 </div>
                               </div>
 
+                              {/* Middle Row: Items & Price */}
                               <div className="flex flex-wrap items-center justify-between gap-y-1.5 gap-x-2">
-                                 <span className="text-[10px] text-slate-300 font-bold bg-slate-900/60 px-2 py-0.5 rounded-md border border-slate-700/50 truncate max-w-[150px] sm:max-w-[200px]" title={equipArr.join(', ')}>📸 {equipmentText}</span>
+                                 <span className="text-[10px] text-slate-300 font-bold bg-slate-900/60 px-2 py-0.5 rounded-md border border-slate-700/50 truncate max-w-[150px] sm:max-w-[200px]" title={equipArr.join(', ')}>
+                                     📸 {equipmentText}
+                                 </span>
                                  {booking.totalPrice !== undefined && (
                                      <div className="flex items-center shrink-0 shadow-sm">
-                                         <span className="text-[10px] text-emerald-400 font-black bg-emerald-500/10 px-1.5 py-0.5 rounded-l-md border border-r-0 border-emerald-500/20">{formatRupiah(booking.totalPrice)}</span>
+                                         <span className="text-[10px] text-emerald-400 font-black bg-emerald-500/10 px-1.5 py-0.5 rounded-l-md border border-r-0 border-emerald-500/20">
+                                             {formatRupiah(booking.totalPrice)}
+                                         </span>
                                          {booking.paymentStatus && (
-                                             <span className={`px-1.5 py-0.5 rounded-r-md border font-black uppercase text-[8px] ${booking.paymentStatus === 'BAYAR LUNAS' ? 'bg-emerald-500 text-slate-900 border-emerald-500' : booking.paymentStatus === 'BAYAR DP' ? 'bg-amber-500 text-slate-900 border-amber-500' : 'bg-rose-500 text-white border-rose-500'}`}>
+                                             <span className={`px-1.5 py-0.5 rounded-r-md border font-black uppercase text-[8px] ${
+                                                 booking.paymentStatus === 'BAYAR LUNAS' ? 'bg-emerald-500 text-slate-900 border-emerald-500' : 
+                                                 booking.paymentStatus === 'BAYAR DP' ? 'bg-amber-500 text-slate-900 border-amber-500' : 
+                                                 'bg-rose-500 text-white border-rose-500'
+                                             }`}>
                                                  {booking.paymentStatus === 'BAYAR DP' ? `DP` : booking.paymentStatus === 'BAYAR LUNAS' ? 'LUNAS' : 'BLM BAYAR'}
                                              </span>
                                          )}
@@ -1361,19 +1605,41 @@
                                  )}
                               </div>
 
+                              {/* Bottom Row: Time & Countdown */}
                               <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                                  <div className="text-[9px] text-slate-500 font-bold bg-slate-900/40 px-1.5 py-0.5 rounded border border-slate-700/30 flex items-center gap-1.5">
                                     <div><span className="text-emerald-500">{booking.startTime}</span><span className="opacity-50 mx-0.5">-</span><span className="text-rose-400">{booking.endTime}</span></div>
-                                    {durationLabel && (<><span className="opacity-40">|</span><span className="text-amber-400 flex items-center gap-0.5"><span className="text-[8px] mt-0.5">⏱️</span> {durationLabel}</span></>)}
+                                    {durationLabel && (
+                                        <>
+                                            <span className="opacity-40">|</span>
+                                            <span className="text-amber-400 flex items-center gap-0.5"><span className="text-[8px] mt-0.5">⏱️</span> {durationLabel}</span>
+                                        </>
+                                    )}
                                  </div>
-                                 {countdownUI && (<div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[8px] font-black tracking-wider ${countdownUI.style}`}><span className="text-[8px]">{countdownUI.icon}</span><span className="mt-0.5 whitespace-nowrap">{countdownUI.text}</span></div>)}
+                                 {countdownUI && (
+                                     <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[8px] font-black tracking-wider ${countdownUI.style}`}>
+                                         <span className="text-[8px]">{countdownUI.icon}</span>
+                                         <span className="mt-0.5 whitespace-nowrap">{countdownUI.text}</span>
+                                     </div>
+                                 )}
                               </div>
                             </div>
                           </div>
 
+                          {/* Action Bar at bottom of thumbnail */}
                           <div className="flex items-center justify-between pt-2.5 mt-0.5 border-t border-slate-700/40 ml-[3.7rem] sm:ml-[4.5rem]">
-                               <button onClick={(e) => { e.stopPropagation(); handleGeneratePDF(booking); }} disabled={isGeneratingPDF} className="py-1 px-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-md text-[9px] font-black uppercase tracking-widest border border-indigo-500/30 transition-all flex items-center gap-1.5 disabled:opacity-50 shadow-sm">{isGeneratingPDF && printingBooking?.id === booking.id ? <span className="animate-spin-slow">⏳</span> : <span>📄</span>} Nota PDF</button>
-                               <div className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-300 text-[9px] ${isExpanded ? 'bg-slate-700 text-white border-slate-500 rotate-180 shadow-md' : 'bg-slate-800 text-slate-400 border-slate-700 group-hover:bg-slate-700 group-hover:text-slate-200'}`}>▼</div>
+                               <button 
+                                  onClick={(e) => { e.stopPropagation(); handleGeneratePDF(booking); }}
+                                  disabled={isGeneratingPDF}
+                                  className="py-1 px-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-md text-[9px] font-black uppercase tracking-widest border border-indigo-500/30 transition-all flex items-center gap-1.5 disabled:opacity-50 shadow-sm"
+                               >
+                                  {isGeneratingPDF && printingBooking?.id === booking.id ? <span className="animate-spin-slow">⏳</span> : <span>📄</span>}
+                                  Nota PDF
+                               </button>
+                               
+                               <div className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-300 text-[9px] ${isExpanded ? 'bg-slate-700 text-white border-slate-500 rotate-180 shadow-md' : 'bg-slate-800 text-slate-400 border-slate-700 group-hover:bg-slate-700 group-hover:text-slate-200'}`}>
+                                  ▼
+                               </div>
                           </div>
                         </div>
 
@@ -1382,19 +1648,35 @@
                             <div className="flex-1 space-y-5">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div className="space-y-3">
-                                      <a href={`tel:${booking.phone}`} className="inline-flex items-center bg-slate-800/80 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl border border-slate-600 shadow-sm text-sm font-bold transition-all hover:shadow-md">📞 {isClient && booking.phone ? booking.phone.slice(0, 4) + '****' + booking.phone.slice(-3) : booking.phone}</a>
+                                      <a href={`tel:${booking.phone}`} className="inline-flex items-center bg-slate-800/80 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl border border-slate-600 shadow-sm text-sm font-bold transition-all hover:shadow-md">
+                                          📞 {isClient && booking.phone ? booking.phone.slice(0, 4) + '****' + booking.phone.slice(-3) : booking.phone}
+                                      </a>
                                       {!isClient && (
                                         <div className="space-y-2">
-                                            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50"><span className="block text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Alamat Domisili</span><span className="text-sm font-medium text-slate-300">{booking.address || '-'}</span></div>
+                                            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                                <span className="block text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Alamat Domisili</span>
+                                                <span className="text-sm font-medium text-slate-300">{booking.address || '-'}</span>
+                                            </div>
                                             {booking.serviceType !== 'fotografer' && (
-                                            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50"><span className="block text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Jaminan Ditahan</span><span className="text-sm font-bold text-sky-400">{(booking.identityGuarantees || []).join(', ')}</span> <span className="text-slate-500 text-xs mx-1">&</span> <span className="text-sm font-bold text-emerald-400">{(booking.otherGuarantees || []).join(', ')}</span></div>
+                                            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                                <span className="block text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Jaminan Ditahan</span>
+                                                <span className="text-sm font-bold text-sky-400">{(booking.identityGuarantees || []).join(', ')}</span> <span className="text-slate-500 text-xs mx-1">&</span> <span className="text-sm font-bold text-emerald-400">{(booking.otherGuarantees || []).join(', ')}</span>
+                                            </div>
                                             )}
                                         </div>
                                       )}
                                   </div>
                                   <div className="flex flex-col gap-2">
-                                      <div className="bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20"><span className="block text-[9px] text-emerald-500/80 font-black uppercase tracking-widest mb-0.5">Waktu Ambil / Mulai</span><div className="text-sm font-bold text-emerald-100">{formatDateDisplay(booking.startDate).dayName}, {formatDateDisplay(booking.startDate).formattedDate}</div><div className="text-2xl font-black text-emerald-400 mt-1">{booking.startTime}</div></div>
-                                      <div className="bg-rose-500/5 p-3 rounded-xl border border-rose-500/20"><span className="block text-[9px] text-rose-500/80 font-black uppercase tracking-widest mb-0.5">Waktu Kembali / Selesai</span><div className="text-sm font-bold text-rose-100">{formatDateDisplay(booking.endDate).dayName}, {formatDateDisplay(booking.endDate).formattedDate}</div><div className="text-2xl font-black text-rose-400 mt-1">{booking.endTime}</div></div>
+                                      <div className="bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
+                                          <span className="block text-[9px] text-emerald-500/80 font-black uppercase tracking-widest mb-0.5">Waktu Ambil / Mulai</span>
+                                          <div className="text-sm font-bold text-emerald-100">{formatDateDisplay(booking.startDate).dayName}, {formatDateDisplay(booking.startDate).formattedDate}</div>
+                                          <div className="text-2xl font-black text-emerald-400 mt-1">{booking.startTime}</div>
+                                      </div>
+                                      <div className="bg-rose-500/5 p-3 rounded-xl border border-rose-500/20">
+                                          <span className="block text-[9px] text-rose-500/80 font-black uppercase tracking-widest mb-0.5">Waktu Kembali / Selesai</span>
+                                          <div className="text-sm font-bold text-rose-100">{formatDateDisplay(booking.endDate).dayName}, {formatDateDisplay(booking.endDate).formattedDate}</div>
+                                          <div className="text-2xl font-black text-rose-400 mt-1">{booking.endTime}</div>
+                                      </div>
                                   </div>
                               </div>
                               <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
@@ -1402,28 +1684,58 @@
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                   {equipArr.map((item, idx) => (
                                       <div key={idx} className="flex items-center text-sm font-bold text-slate-300 bg-slate-900/80 p-3 rounded-lg border border-slate-700 shadow-inner">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-3 shadow-[0_0_5px_rgba(16,185,129,0.8)]"></div><span className="truncate pr-2">{item}</span>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-3 shadow-[0_0_5px_rgba(16,185,129,0.8)]"></div> 
+                                        <span className="truncate pr-2">{item}</span>
                                       </div>
                                   ))}
                                 </div>
                               </div>
                               {booking.paymentStatus && (
-                                <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner ${booking.paymentStatus === 'BAYAR LUNAS' ? 'bg-emerald-500/10 border-emerald-500/30' : booking.paymentStatus === 'BAYAR DP' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
+                                <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner ${
+                                  booking.paymentStatus === 'BAYAR LUNAS' ? 'bg-emerald-500/10 border-emerald-500/30' : 
+                                  booking.paymentStatus === 'BAYAR DP' ? 'bg-amber-500/10 border-amber-500/30' : 
+                                  'bg-rose-500/10 border-rose-500/30'
+                                }`}>
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-md ${booking.paymentStatus === 'BAYAR LUNAS' ? 'bg-emerald-500 text-white' : booking.paymentStatus === 'BAYAR DP' ? 'bg-amber-500 text-slate-900' : 'bg-rose-500 text-white'}`}>💳</div>
-                                        <div><span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Tagihan</span><strong className={`text-base font-black uppercase tracking-wide ${booking.paymentStatus === 'BAYAR LUNAS' ? 'text-emerald-400' : booking.paymentStatus === 'BAYAR DP' ? 'text-amber-400' : 'text-rose-400'}`}>{booking.paymentStatus}</strong></div>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-md ${
+                                          booking.paymentStatus === 'BAYAR LUNAS' ? 'bg-emerald-500 text-white' : 
+                                          booking.paymentStatus === 'BAYAR DP' ? 'bg-amber-500 text-slate-900' : 
+                                          'bg-rose-500 text-white'
+                                        }`}>💳</div>
+                                        <div>
+                                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Tagihan</span>
+                                            <strong className={`text-base font-black uppercase tracking-wide ${
+                                                booking.paymentStatus === 'BAYAR LUNAS' ? 'text-emerald-400' : 
+                                                booking.paymentStatus === 'BAYAR DP' ? 'text-amber-400' : 
+                                                'text-rose-400'
+                                            }`}>{booking.paymentStatus}</strong>
+                                        </div>
                                     </div>
                                     <div className="flex gap-4 sm:text-right bg-slate-950/30 p-2 sm:p-0 sm:bg-transparent rounded-lg sm:rounded-none">
-                                        {booking.paymentStatus === 'BAYAR DP' && (<div><span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Uang Masuk:</span><span className="font-black text-amber-400 text-lg">{formatRupiah(booking.dpAmount || 0)}</span></div>)}
-                                        <div className={booking.paymentStatus === 'BAYAR DP' ? "border-l border-slate-700 pl-4" : ""}><span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">{booking.paymentStatus === 'BAYAR DP' ? 'Sisa Kekurangan:' : 'Total Biaya:'}</span><span className={`font-black text-lg ${booking.paymentStatus === 'BAYAR LUNAS' ? 'text-emerald-400' : 'text-rose-400'}`}>{booking.paymentStatus === 'BAYAR DP' ? formatRupiah((booking.totalPrice || 0) - (booking.dpAmount || 0)) : formatRupiah(booking.totalPrice || 0)}</span></div>
+                                        {booking.paymentStatus === 'BAYAR DP' && (
+                                            <div>
+                                                <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Uang Masuk:</span>
+                                                <span className="font-black text-amber-400 text-lg">{formatRupiah(booking.dpAmount || 0)}</span>
+                                            </div>
+                                        )}
+                                        <div className={booking.paymentStatus === 'BAYAR DP' ? "border-l border-slate-700 pl-4" : ""}>
+                                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">{booking.paymentStatus === 'BAYAR DP' ? 'Sisa Kekurangan:' : 'Total Biaya:'}</span>
+                                            <span className={`font-black text-lg ${booking.paymentStatus === 'BAYAR LUNAS' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                {booking.paymentStatus === 'BAYAR DP' ? formatRupiah((booking.totalPrice || 0) - (booking.dpAmount || 0)) : formatRupiah(booking.totalPrice || 0)}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                               )}
                               {booking.notes && (
-                                <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50"><span className="block text-[9px] text-slate-500 font-black uppercase tracking-widest mb-2 flex items-center gap-1.5"><span>📝</span> Pesan Khusus</span><p className="text-sm text-slate-300 font-medium italic border-l-2 border-slate-600 pl-3">"{booking.notes}"</p></div>
+                                <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
+                                  <span className="block text-[9px] text-slate-500 font-black uppercase tracking-widest mb-2 flex items-center gap-1.5"><span>📝</span> Pesan Khusus</span>
+                                  <p className="text-sm text-slate-300 font-medium italic border-l-2 border-slate-600 pl-3">"{booking.notes}"</p>
+                                </div>
                               )}
                             </div>
                             
+                            {/* Panel Aksi Admin (Tombol PDF Lama Dihapus karena sudah ada di atas) */}
                             {!isClient && (
                             <div className="flex flex-col gap-3 w-full lg:w-[220px] shrink-0 lg:mt-0 mt-4 h-fit sticky top-4">
                                 <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-700/50 shadow-xl flex flex-col gap-3">
@@ -1577,7 +1889,7 @@
                             )}
                         </div>
 
-                        <form id="bookingForm" onSubmit={handleSubmit} noValidate className="space-y-8">
+                        <form id="bookingForm" onSubmit={handleSubmit} className="space-y-8">
                           
                           <div id="step-1" className="space-y-3 relative z-10 scroll-mt-24">
                             <div className="inline-flex items-center gap-2.5 bg-slate-800/80 border border-slate-700 pr-5 pl-2 py-1.5 rounded-full mb-2 shadow-sm backdrop-blur-md">
@@ -1945,6 +2257,7 @@
 
                             <div className="bg-slate-800/40 p-4 sm:p-5 rounded-3xl border border-slate-700/50 space-y-4">
                                <div className={`grid gap-3 ${!isClient ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-3'}`}>
+                                   {}
                                    {(!isClient ? ['BELUM BAYAR', 'BAYAR DP', 'BAYAR LUNAS'] : ['BELUM BAYAR', 'BAYAR DP', 'BAYAR LUNAS']).map(status => {
                                        const displayStatus = (isClient && status === 'BELUM BAYAR') ? 'BAYAR NANTI AJA' : status;
                                        return (
@@ -1956,6 +2269,7 @@
                                    })}
                                </div>
                                
+                               {}
                                {isClient && formData.paymentStatus === 'BELUM BAYAR' && (
                                    <div className="p-4 sm:p-5 bg-rose-900/30 rounded-2xl border border-rose-500/50 animate-slideUp">
                                         <h4 className="text-rose-400 font-black text-xs uppercase tracking-widest mb-2 flex items-center gap-2"><span>🚨</span> Perhatian: Status Tidak Ter-Booking!</h4>
@@ -1992,6 +2306,7 @@
                       </div>
                   )}
 
+                  {}
                   {!isClient && (activeTab === 'aktif' || activeTab === 'arsip') && (
                     <div className="bg-slate-900/60 backdrop-blur-xl p-4 sm:p-7 rounded-3xl shadow-2xl border border-slate-800 animate-fadeIn">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-slate-800 pb-5">
@@ -2041,6 +2356,7 @@
                     </div>
                   )}
 
+                  {}
                   {!isClient && activeTab === 'pengaturan' && (
                     <div className="bg-slate-900/60 backdrop-blur-xl p-5 sm:p-7 rounded-3xl shadow-2xl border border-slate-800 animate-fadeIn">
                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-800 pb-5">
@@ -2096,6 +2412,7 @@
                   )}
                 </div>
 
+                {}
                 {!isClient && activeTab === 'keuangan' && (
                   <div className="space-y-6 print:block animate-fadeIn">
                     <div className="hidden print:block mb-8 text-center">
@@ -2199,6 +2516,7 @@
                 )}
               </div>
 
+              {}
               {printingBooking && (
                 <div id="pdf-nota-container" className="fixed top-0 left-[-9999px] z-[-1] bg-white box-border" style={{ width: '210mm', minHeight: '297mm', padding: '40px', fontFamily: '"Plus Jakarta Sans", sans-serif', color: '#000' }}>
                     {printingBooking.paymentStatus === 'BAYAR LUNAS' ? (
@@ -2208,6 +2526,7 @@
                     ) : (
                         <div className="absolute top-[30%] left-[15%] rotate-[-30deg] text-6xl font-black text-rose-500 opacity-10 pointer-events-none uppercase tracking-widest border-8 border-rose-500 rounded-3xl p-6">BELUM BAYAR</div>
                     )}
+                    {/* HEADER KOP SURAT */}
                     <header className="flex justify-between items-start border-b-2 border-slate-800 pb-6 mb-8">
                         <div className="flex items-center gap-4">
                             <div className="w-20 h-20 shrink-0 flex items-center justify-center border border-slate-200 rounded-lg p-1 bg-white relative">
@@ -2369,11 +2688,13 @@
                                 <p className="text-sm font-bold text-slate-800 underline">{printingBooking.customerName}</p>
                             </div>
                             <div className="relative">
+                                {/* STEMPEL TOKO MENGGUNAKAN DIRECT LINK BARU */}
                                 <div className="absolute top-0 left-[-20px] w-24 h-24 opacity-80 mix-blend-multiply z-[-1] flex items-center justify-center">
                                     <img crossOrigin="anonymous" src="https://i.ibb.co.com/gkXjzGx/stample.png" alt="Stamp" className="w-full h-full object-contain" />
                                 </div>
                                 <p className="text-sm font-semibold text-slate-600 mb-2">Admin Sewa,</p>
                                 
+                                {/* TANDA TANGAN MENGGUNAKAN DIRECT LINK BARU */}
                                 <div className="w-24 h-12 mx-auto mb-2 flex items-center justify-center">
                                     <img crossOrigin="anonymous" src="https://i.ibb.co.com/XZbcptg2/ttd.png" alt="Sign" className="w-full h-full object-contain" />
                                 </div>
@@ -2385,6 +2706,762 @@
                 </div>
               )}
 
+              {showConfirmation && (
+                <div className="fixed inset-0 z-[50] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md transition-opacity">
+                  <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col animate-slideUp pb-safe">
+                    <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 sm:hidden shrink-0"></div>
+                    <div className="px-5 sm:px-6 pb-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+                        <h3 className="text-xl font-extrabold text-white flex items-center gap-2"><span>{editingId ? '📝' : '🛒'}</span> {editingId ? 'Konfirmasi Edit' : 'Ringkasan Pesanan'}</h3>
+                        <button onClick={() => setShowConfirmation(false)} className="text-slate-500 hover:text-white bg-slate-800 rounded-full p-1.5 transition-colors sm:hidden"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    </div>
+                    
+                    <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+                      <div className="bg-slate-800/40 p-3 sm:p-4 rounded-2xl border border-slate-700/50">
+                        <span className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest">Identitas Pemesan</span>
+                        <div className="text-slate-200 text-sm flex mb-1.5"><span className="font-medium text-slate-400 w-20 shrink-0">Nama:</span> <span className="font-bold">{formData.customerName}</span></div>
+                        <div className="text-slate-200 text-sm flex mb-1.5"><span className="font-medium text-slate-400 w-20 shrink-0">No. HP:</span> <span className="font-bold text-sky-400">{formData.phone}</span></div>
+                        <div className="text-slate-200 text-sm flex"><span className="font-medium text-slate-400 w-20 shrink-0">Alamat:</span> <span className="line-clamp-2">{formData.address}</span></div>
+                      </div>
+
+                      <div className="bg-slate-800/40 p-3 sm:p-4 rounded-2xl border border-slate-700/50 grid grid-cols-2 gap-3">
+                        <div className="bg-slate-900/50 p-2 sm:p-3 rounded-xl border border-slate-700">
+                           <span className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{serviceType === 'fotografer' ? 'Mulai' : 'Ambil'}</span> 
+                           <span className="block text-[16px] sm:text-xs text-slate-300 font-bold mb-0.5">{formatDateDisplay(formData.startDate).formattedDate}</span>
+                           <span className="block text-lg sm:text-xl text-emerald-400 font-black">{formData.startTime}</span>
+                        </div>
+                        <div className="bg-slate-900/50 p-2 sm:p-3 rounded-xl border border-slate-700">
+                           <span className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{serviceType === 'fotografer' ? 'Selesai' : 'Kembali'}</span> 
+                           <span className="block text-[16px] sm:text-xs text-slate-300 font-bold mb-0.5">{formatDateDisplay(formData.endDate).formattedDate}</span>
+                           <span className="block text-lg sm:text-xl text-rose-400 font-black">{formData.endTime}</span>
+                        </div>
+                      </div>
+
+                        <div className="bg-slate-800/40 p-3 sm:p-4 rounded-2xl border border-slate-700/50">
+                        <span className="block text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest">{serviceType === 'fotografer' ? 'Paket Layanan' : 'Barang yang Disewa'} ({formData.equipment.length})</span>
+                        <ul className="text-slate-200 text-sm space-y-3 max-h-[150px] overflow-y-auto custom-scrollbar pr-1">
+                          {formData.equipment.map((item, idx) => {
+                             const isPromoLens = item.includes("Lensa Fix STM 50mm f1.8 Canon") || item.includes("Lensa Tele Canon 75-300mm USM");
+                             let isFreeWith6D = (has6D && isPromoLens && selectedPromoLenses[0] === item);
+
+                             return (
+                                <li key={idx} className="flex items-start justify-between border-b border-slate-700/50 pb-3 last:border-0 last:pb-0 gap-3">
+                                   <div className="flex items-start">
+                                       <div className={`w-1.5 h-1.5 rounded-full ${serviceType === 'fotografer' ? 'bg-indigo-500 shadow-indigo-500' : 'bg-emerald-500 shadow-emerald-500'} mr-2.5 mt-1.5 shrink-0 shadow-[0_0_5px_rgba(16,185,129,0.8)]`}></div> 
+                                       <span className="font-semibold text-[15px] sm:text-sm leading-snug">{item}</span>
+                                   </div>
+                                   <span className={`font-black text-[15px] sm:text-sm shrink-0 pl-2 mt-0.5 ${isFreeWith6D ? 'text-sky-400' : 'text-slate-300'}`}>
+                                      {isFreeWith6D ? 'Rp 0' : formatRupiah(getItemPrice(item, rentalDurationHours, hasCamera, customPricing, dynamicPackages))}
+                                   </span>
+                                </li>
+                             )
+                          })}
+                        </ul>
+                        
+                        <div className="mt-3 pt-3 border-t border-slate-700/80 bg-slate-900/30 p-3 rounded-xl">
+                           <div className="flex justify-between items-center">
+                             <span className="font-black text-slate-400 text-[16px] sm:text-xs uppercase tracking-widest">Grand Total:</span>
+                             <span className="font-black text-xl sm:text-2xl text-emerald-400">{formatRupiah(currentTotalCost)}</span>
+                           </div>
+                           
+                           {Number(formData.discount || 0) > 0 && (
+                             <div className="flex justify-between items-center text-emerald-400 text-[10px] sm:text-xs mt-1 bg-emerald-500/10 px-2 py-1 rounded">
+                                 <span className="font-medium uppercase tracking-widest">Diskon Khusus:</span>
+                                 <span className="font-bold">- {formatRupiah(Number(formData.discount))}</span>
+                             </div>
+                           )}
+                            <div className="flex justify-between items-center bg-slate-950/50 p-2 sm:p-3 rounded-xl border border-slate-700/50 mt-2 sm:mt-3">
+                             <span className="font-black text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-widest">Pilihan Bayar:</span>
+                             <span className={`font-black text-[10px] sm:text-xs px-2 py-1 rounded-md border shadow-sm ${formData.paymentStatus === 'BAYAR LUNAS' ? 'bg-emerald-500 text-slate-900 border-emerald-400' : formData.paymentStatus === 'BAYAR DP' ? 'bg-amber-500 text-slate-900 border-amber-400' : 'bg-slate-700 text-white border-slate-500'}`}>
+                                {}
+                                {isClient && formData.paymentStatus === 'BELUM BAYAR' ? 'BAYAR NANTI AJA' : formData.paymentStatus} {formData.paymentStatus === 'BAYAR DP' ? `(${formatRupiah(formData.dpAmount || 0)})` : ''}
+                             </span>
+                           </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 sm:p-5 border-t border-slate-800 flex gap-3 shrink-0 bg-slate-900 rounded-b-3xl">
+                      <button onClick={() => setShowConfirmation(false)} disabled={isSaving} className={`flex-1 px-3 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all border border-slate-600 active:scale-95 text-[16px] sm:text-sm uppercase tracking-wider ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}>Revisi Data</button>
+                      <button onClick={confirmBooking} disabled={isSaving} className={`flex-[2] px-3 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white rounded-xl font-black transition-all shadow-[0_4px_15px_rgba(16,185,129,0.3)] active:scale-95 text-[16px] sm:text-sm uppercase tracking-widest ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        {isSaving ? '⏳ Menyimpan...' : (editingId ? 'Simpan' : (!isClient ? 'Simpan Jadwal' : (formData.paymentStatus === 'BELUM BAYAR' ? 'Kirim Konfirmasi WA' : 'Lanjut Pembayaran')))}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {showPayment && (
+                <div className="fixed inset-0 z-[55] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 backdrop-blur-lg transition-opacity">
+                  <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-[0_-10px_40px_rgba(16,185,129,0.15)] max-w-md w-full max-h-[95vh] flex flex-col animate-slideUp pb-safe">
+                    <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 sm:hidden shrink-0"></div>
+                    <div className="px-5 sm:px-6 pb-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+                        <h3 className="text-xl font-extrabold text-white flex items-center gap-2"><span>💳</span> Selesaikan Pembayaran</h3>
+                        <button onClick={() => setShowPayment(false)} className="text-slate-500 hover:text-white bg-slate-800 rounded-full p-1.5 transition-colors sm:hidden"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    </div>
+                    <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                      <div className="bg-gradient-to-b from-slate-800 to-slate-900 p-6 rounded-3xl border border-slate-700 text-center shadow-inner relative overflow-hidden">
+                          <div className="absolute -top-4 -right-4 text-7xl opacity-5">💸</div>
+                          <span className="block text-[16px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Nominal Yang Harus Ditransfer</span>
+                          <span className={`block text-4xl font-black relative z-10 ${formData.paymentStatus === 'BAYAR DP' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                              {formData.paymentStatus === 'BAYAR DP' ? formatRupiah(formData.dpAmount || 0) : formatRupiah(currentTotalCost)}
+                          </span>
+                          <span className="inline-block mt-3 bg-slate-950/50 px-3 py-1 rounded-full text-[10px] font-bold text-slate-300 border border-slate-700">Status: {formData.paymentStatus}</span>
+                      </div>
+                      <div className="space-y-3">
+                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><span>🏦</span> Transfer Ke Rekening Berikut:</h4>
+                          <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700 hover:border-sky-500/50 transition-colors group">
+                              <div className="flex justify-between items-start mb-3">
+                                  <div>
+                                      <div className="bg-white px-2 py-1.5 rounded mb-2 inline-flex items-center justify-center min-w-[60px] min-h-[28px] shadow-sm">
+                                          <img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/BRI_2020.svg" alt="Bank BRI" className="h-4 sm:h-5 object-contain" />
+                                      </div>
+                                      <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">A/N MUHAMMAD IMRON</span>
+                                  </div>
+                                  <div className="bg-sky-500/10 text-sky-400 text-[10px] font-black px-2 py-1 rounded-lg border border-sky-500/20">BANK</div>
+                              </div>
+                              <div className="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
+                                  <span className="font-mono text-lg font-black text-slate-200 tracking-wider">619801005524533</span>
+                                  <button onClick={() => copyToClipboard('619801005524533')} className="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg transition-colors active:scale-95">📋</button>
+                              </div>
+                          </div>
+                          <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                              <div className="flex justify-between items-start mb-3">
+                                  <div>
+                                      <div className="flex gap-2 items-center mb-2">
+                                          <div className="bg-white px-2 py-1.5 rounded inline-flex items-center justify-center min-w-[60px] min-h-[28px] shadow-sm">
+                                              <img src="https://upload.wikimedia.org/wikipedia/commons/7/72/Logo_dana_blue.svg" alt="DANA" className="h-3 sm:h-4 object-contain" />
+                                          </div>
+                                          <div className="bg-white px-2 py-1.5 rounded inline-flex items-center justify-center min-w-[60px] min-h-[28px] shadow-sm">
+                                              <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Gopay_logo.svg" alt="GOPAY" className="h-3 sm:h-4 object-contain" />
+                                          </div>
+                                      </div>
+                                      <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">A/N MUHAMMAD IMRON</span>
+                                  </div>
+                                  <div className="bg-emerald-500/10 text-emerald-400 text-[10px] font-black px-2 py-1 rounded-lg border border-emerald-500/20">E-WALLET</div>
+                              </div>
+                              <div className="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
+                                  <span className="font-mono text-lg font-black text-slate-200 tracking-wider">085233701584</span>
+                                  <button onClick={() => copyToClipboard('085233701584')} className="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg transition-colors active:scale-95">📋</button>
+                              </div>
+                          </div>
+                      </div>
+                      <div className="bg-emerald-900/20 p-4 rounded-xl border border-emerald-500/30 text-sm">
+                         <span className="block text-[10px] font-black text-emerald-400 mb-1 uppercase tracking-widest flex items-center gap-1.5"><span>📸</span> Instruksi Bukti Bayar</span>
+                         <p className="text-emerald-100/70 font-medium">Setelah transfer, klik tombol di bawah untuk mengirim bukti ke WhatsApp Admin.</p>
+                      </div>
+                    </div>
+                    <div className="p-5 sm:p-6 border-t border-slate-800 flex gap-3 shrink-0">
+                      <button onClick={() => setShowPayment(false)} disabled={isSaving} className={`px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all border border-slate-600 active:scale-95 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}>Batal</button>
+                      <button onClick={processFinalPayment} disabled={isSaving} className={`flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-900 rounded-xl font-black transition-all shadow-[0_4px_15px_rgba(16,185,129,0.3)] active:scale-95 text-[16px] sm:text-base uppercase tracking-widest flex items-center justify-center gap-2 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        {isSaving ? '⏳ Menyimpan...' : <><span>💬</span> Kirim Bukti ke WA</>}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isClient && showClientSchedule && (
+                <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md transition-opacity">
+                  <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col animate-slideUp pb-safe">
+                    <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 sm:hidden shrink-0"></div>
+                    <div className="px-5 sm:px-6 pb-4 border-b border-slate-800 flex justify-between items-center shrink-0">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2"><span>📅</span> Daftar Jadwal Sewa</h3>
+                      <button onClick={() => setShowClientSchedule(false)} className="text-slate-500 hover:text-white bg-slate-800 rounded-full p-1.5 transition-colors sm:hidden"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    </div>
+                    <div className="px-4 pt-4 shrink-0 bg-slate-950/30">
+                        <div className="relative max-w-md mx-auto">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">🔍</div>
+                            <input type="text" placeholder="Cari nama Anda..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-slate-900 text-white text-[16px] sm:text-sm pl-9 pr-3 py-3 rounded-xl border border-slate-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all outline-none placeholder-slate-500" />
+                        </div>
+                    </div>
+                    <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 bg-slate-950/30">
+                      {renderBookingsList}
+                    </div>
+                    <div className="p-5 sm:p-6 border-t border-slate-800 shrink-0">
+                      <button onClick={() => setShowClientSchedule(false)} className="w-full px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all shadow-sm text-[16px] sm:text-sm uppercase tracking-widest border border-slate-600 active:scale-95">Tutup Daftar Jadwal</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {}
+              {showPriceList && (
+                <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md transition-opacity">
+                  <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col animate-slideUp pb-safe overflow-hidden relative">
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-[-50px] left-[-50px] w-48 h-48 bg-emerald-500/20 rounded-full blur-[80px] pointer-events-none"></div>
+                    <div className="absolute bottom-[-50px] right-[-50px] w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+                    <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 sm:hidden shrink-0 relative z-10"></div>
+                    <div className="px-5 sm:px-8 pt-6 pb-4 flex justify-between items-center shrink-0 relative z-10 border-b border-slate-800/80">
+                      <h3 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-sky-400 flex items-center gap-3">
+                        <span className="text-3xl">💎</span> Katalog & Harga
+                      </h3>
+                      <button onClick={() => setShowPriceList(false)} className="text-slate-500 hover:text-white bg-slate-800/80 rounded-full p-2 transition-all hover:bg-rose-500/20 hover:text-rose-400 sm:hidden">
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+
+                    <div className="px-5 sm:px-8 py-5 shrink-0 border-b border-slate-800/60 bg-slate-900/50 backdrop-blur-sm relative z-10">
+                        <div className="flex bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800/80 shadow-inner max-w-md mx-auto">
+                           <button onClick={() => setKatalogTab('kamera')} className={`flex-1 py-3 rounded-xl font-black text-[14px] sm:text-sm uppercase tracking-widest transition-all duration-300 ${katalogTab === 'kamera' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.4)] scale-[1.02]' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900'}`}>📷 Sewa Alat</button>
+                           <button onClick={() => setKatalogTab('fotografer')} className={`flex-1 py-3 rounded-xl font-black text-[14px] sm:text-sm uppercase tracking-widest transition-all duration-300 ${katalogTab === 'fotografer' ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] scale-[1.02]' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900'}`}>📸 Jasa Foto</button>
+                        </div>
+                    </div>
+                    
+                    <div className="p-5 sm:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-10 bg-slate-950/40 relative z-10">
+                      {katalogTab === 'kamera' ? (
+                          <div className="space-y-10">
+                              {Object.entries(dynamicEquipment).map(([category, items]) => {
+                                const uniqueItems = [];
+                                const seenBases = new Set();
+                                items.forEach(item => {
+                                  const baseName = item.replace(/\s*\(Unit \d+\)/i, '');
+                                  if (!seenBases.has(baseName)) {
+                                     seenBases.add(baseName);
+                                     uniqueItems.push({ original: item, display: baseName });
+                                  }
+                                });
+
+                                return (
+                                <div key={category} className="relative">
+                                  <div className="sticky top-0 bg-slate-950/90 backdrop-blur-xl z-20 -mx-5 px-5 sm:-mx-8 sm:px-8 py-3 mb-6 border-y border-slate-800/50 shadow-sm">
+                                      <h4 className="text-[13px] font-black text-emerald-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                                          {category}
+                                      </h4>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    {uniqueItems.map(({ original, display }) => {
+                                      const pricing = customPricing[original] || DEFAULT_PRICING[original];
+                                      if (!pricing) return null;
+                                      
+                                      // Cek apakah item adalah lensa fix/tele untuk menampilkan badge khusus
+                                      const isPromoLens = display.includes("Lensa Fix STM 50mm f1.8 Canon") || display.includes("Lensa Tele Canon 75-300mm USM");
+
+                                      return (
+                                        <div key={display} className="bg-slate-900/80 p-5 rounded-[1.5rem] border border-slate-800 shadow-lg flex flex-col justify-between hover:border-emerald-500/50 hover:bg-slate-800 transition-all duration-300 group relative overflow-hidden">
+                                           {/* Hover Glow Effect */}
+                                           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-transparent to-transparent opacity-0 group-hover:from-emerald-500/5 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                                           
+                                           <div className="flex items-start justify-between mb-5 relative z-10">
+                                               <div className="font-extrabold text-white text-[16px] sm:text-lg flex items-start gap-3 leading-snug">
+                                                   <span className="text-2xl drop-shadow-md">📸</span>
+                                                   <span className="mt-0.5">{display}</span>
+                                               </div>
+                                               {isPromoLens && (
+                                                   <span className="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg shrink-0 shadow-sm">Promo 6D</span>
+                                               )}
+                                           </div>
+                                           
+                                           <div className="grid grid-cols-4 gap-2 sm:gap-3 text-center relative z-10">
+                                              <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800/80 group-hover:border-slate-700 transition-colors flex flex-col justify-center">
+                                                 <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1.5">4 Jam</div>
+                                                 <div className="text-[15px] sm:text-base font-bold text-slate-300">{pricing[4] / 1000}K</div>
+                                              </div>
+                                              <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800/80 group-hover:border-slate-700 transition-colors flex flex-col justify-center">
+                                                 <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1.5">6 Jam</div>
+                                                 <div className="text-[15px] sm:text-base font-bold text-slate-300">{pricing[6] / 1000}K</div>
+                                              </div>
+                                              <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800/80 group-hover:border-slate-700 transition-colors flex flex-col justify-center">
+                                                 <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1.5">12 Jam</div>
+                                                 <div className="text-[15px] sm:text-base font-bold text-slate-300">{pricing[12] / 1000}K</div>
+                                              </div>
+                                              <div className="bg-gradient-to-b from-emerald-500/10 to-teal-500/5 rounded-xl p-2.5 border border-emerald-500/30 group-hover:border-emerald-400/50 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all flex flex-col justify-center relative overflow-hidden">
+                                                 <div className="absolute top-0 right-0 w-8 h-8 bg-emerald-500/20 rounded-bl-full blur-[8px]"></div>
+                                                 <div className="text-[9px] sm:text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1.5 relative z-10">24 Jam</div>
+                                                 <div className="text-[15px] sm:text-base font-black text-emerald-300 relative z-10">{pricing[24] / 1000}K</div>
+                                              </div>
+                                           </div>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+                              )})}
+                              
+                              <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-emerald-500/20 p-6 sm:p-8 rounded-[2rem] space-y-4 shadow-2xl relative overflow-hidden">
+                                 {/* Accent Line */}
+                                 <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b from-emerald-400 to-sky-500"></div>
+                                 
+                                 <h5 className="font-black text-white text-lg sm:text-xl flex items-center gap-3">
+                                     <span className="text-3xl drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]">🌟</span> Penawaran Spesial
+                                 </h5>
+                                 <ul className="text-slate-300 space-y-3 list-none text-[15px] sm:text-base font-medium leading-relaxed mt-4">
+                                    <li className="flex items-start gap-3">
+                                        <span className="text-emerald-400 text-lg mt-0.5">✦</span>
+                                        <p><strong className="text-emerald-100 font-bold tracking-wide">Paket Canon EOS 6D:</strong> Harga sewa sudah <span className="underline decoration-emerald-500/50 underline-offset-4">termasuk 1 Lensa Fix atau Tele</span>. Lensa wajib dipilih saat form pemesanan.</p>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <span className="text-sky-400 text-lg mt-0.5">✦</span>
+                                        <p><strong className="text-sky-100 font-bold tracking-wide">Diskon Otomatis 10%:</strong> Dapatkan potongan harga 10% langsung jika Anda menyewa alat minimal selama <span className="text-sky-400 font-black">3 Hari (72 Jam)</span> penuh.</p>
+                                    </li>
+                                 </ul>
+                              </div>
+                          </div>
+                      ) : (
+                          <div className="space-y-8">
+                              {!isClient && (
+                                  <button onClick={() => setEditPackageModal({})} className="w-full py-4 bg-slate-900/50 border-2 border-dashed border-indigo-500/50 text-indigo-400 font-bold rounded-2xl flex items-center justify-center gap-3 hover:bg-indigo-500/10 hover:border-indigo-400 transition-all group">
+                                      <span className="text-2xl group-hover:scale-125 transition-transform">➕</span> <span className="uppercase tracking-widest text-sm">Tambah Paket Fotografer</span>
+                                  </button>
+                              )}
+
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                                  {(() => {
+                                      // Kelompokkan berdasarkan Kategori (Judul Utama)
+                                      const groupedPackages = {};
+                                      dynamicPackages.forEach(pkg => {
+                                          if (!groupedPackages[pkg.category]) groupedPackages[pkg.category] = [];
+                                          groupedPackages[pkg.category].push(pkg);
+                                      });
+
+                                      return Object.entries(groupedPackages).map(([categoryName, packages]) => (
+                                          <div key={categoryName} className="lg:col-span-1 border border-slate-800/80 rounded-[2rem] p-6 sm:p-8 bg-gradient-to-b from-slate-900/80 to-slate-950/80 shadow-lg relative overflow-hidden">
+                                              {/* Category Header Decor */}
+                                              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-bl-full pointer-events-none"></div>
+                                              
+                                              <h4 className="text-xl sm:text-2xl font-black text-white mb-6 border-b border-slate-800 pb-4 flex items-center gap-3 relative z-10">
+                                                  <span className="text-indigo-400">❖</span> {categoryName}
+                                              </h4>
+                                              
+                                              <div className="space-y-5 relative z-10">
+                                                  {packages.map(pkg => (
+                                                      <div key={pkg.id} className="bg-slate-950/60 p-5 sm:p-6 rounded-2xl border border-indigo-500/20 shadow-md relative group hover:border-indigo-500/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)] transition-all">
+                                                          {/* Subtle Inner Glow */}
+                                                          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-transparent to-transparent opacity-0 group-hover:from-indigo-500/5 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none"></div>
+                                                          
+                                                          {!isClient && (
+                                                              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-20">
+                                                                  <button onClick={() => setEditPackageModal(pkg)} className="bg-sky-500 hover:bg-sky-400 text-white p-2 rounded-lg shadow-lg active:scale-95 transition-all" title="Edit">✏️</button>
+                                                                  <button onClick={() => handleDeleteDynamicPackage(pkg.id)} className="bg-rose-500 hover:bg-rose-400 text-white p-2 rounded-lg shadow-lg active:scale-95 transition-all" title="Hapus">🗑️</button>
+                                                              </div>
+                                                          )}
+                                                          
+                                                          <div className="flex justify-between items-start mb-4 pr-16">
+                                                              <span className="text-sm sm:text-base text-white font-black uppercase tracking-widest">{pkg.name}</span>
+                                                              <span className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-300 drop-shadow-sm">{formatRupiah(pkg.price)}</span>
+                                                          </div>
+                                                          
+                                                          <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                                                              <ul className="text-[13px] sm:text-sm text-slate-300 space-y-2">
+                                                                  {pkg.details.map((detail, idx) => (
+                                                                      <li key={idx} className="flex items-start gap-2">
+                                                                          <span className="text-indigo-500 font-black mt-0.5">•</span>
+                                                                          <span className="leading-snug">{detail}</span>
+                                                                      </li>
+                                                                  ))}
+                                                              </ul>
+                                                          </div>
+                                                      </div>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      ));
+                                  })()}
+                              </div>
+                          </div>
+                      )}
+                    </div>
+
+                    <div className="p-5 sm:p-6 border-t border-slate-800/80 shrink-0 bg-slate-950/80 backdrop-blur-md relative z-10">
+                      <button onClick={() => setShowPriceList(false)} className="w-full py-4 sm:py-5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl sm:rounded-2xl font-black transition-all shadow-sm text-[15px] sm:text-base uppercase tracking-[0.2em] border border-slate-600 hover:border-slate-500 active:scale-[0.98]">
+                        Tutup Katalog
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {}
+              {editPackageModal && (
+                  <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 backdrop-blur-sm transition-opacity">
+                      <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col animate-slideUp pb-safe">
+                          <div className="px-5 sm:px-6 py-4 border-b border-slate-800 flex justify-between items-center shrink-0">
+                              <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
+                                  <span>{editPackageModal.id ? '✏️' : '➕'}</span> {editPackageModal.id ? 'Edit Paket' : 'Tambah Paket'}
+                              </h3>
+                              <button onClick={() => setEditPackageModal(null)} className="text-slate-500 hover:text-white bg-slate-800 rounded-full p-1.5 transition-colors"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                          </div>
+                          
+                          <form onSubmit={handleSaveDynamicPackage} className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+                              <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Kategori / Judul Utama</label>
+                                  <input type="text" name="category" defaultValue={editPackageModal.category || ''} required placeholder="Contoh: Foto Wisuda" className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-white outline-none" />
+                              </div>
+                              <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Nama Paket</label>
+                                  <input type="text" name="name" defaultValue={editPackageModal.name || ''} required placeholder="Contoh: Paket 1" className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-white outline-none" />
+                              </div>
+                              <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Harga (Rp)</label>
+                                  <input type="number" name="price" defaultValue={editPackageModal.price || ''} required placeholder="Contoh: 250000" className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-white outline-none" />
+                              </div>
+                              <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Fasilitas / Keterangan (Pisahkan dengan Enter)</label>
+                                  <textarea name="details" defaultValue={editPackageModal.details ? editPackageModal.details.join('\n') : ''} required rows="5" placeholder="1 Fotografer&#10;Durasi 1 Jam&#10;Unlimited Photoshot..." className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-white outline-none custom-scrollbar"></textarea>
+                                  <p className="text-[10px] text-slate-500 mt-1 pl-1">Tiap baris baru akan menjadi poin (•) pada daftar.</p>
+                              </div>
+                              <button type="submit" className="w-full py-4 mt-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black uppercase tracking-widest text-sm shadow-md transition-colors">Simpan Paket</button>
+                          </form>
+                      </div>
+                  </div>
+              )}
+
+              {}
+              {extendModal && (
+                <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md transition-opacity">
+                  <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-md w-full p-5 sm:p-7 flex flex-col animate-slideUp pb-safe">
+                    <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-4 sm:hidden"></div>
+                    <h3 className="text-xl font-extrabold text-white mb-2 flex items-center gap-2">⏱️ Perpanjang Waktu</h3>
+                    <p className="text-[16px] sm:text-sm text-slate-400 font-medium mb-5">Penyewa: <strong className="text-white">{extendModal.customerName}</strong></p>
+
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 mb-5 text-[16px] sm:text-sm shadow-inner">
+                      <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Jadwal Kembali Lama:</div>
+                      <div className="text-rose-400 font-black text-base">{formatDateDisplay(extendModal.endDate).formattedDate} <span className="text-slate-500 font-normal mx-1">|</span> {extendModal.endTime} WIB</div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-5">
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Tgl Kembali Baru</label>
+                        <input type="date" value={extendModal.newEndDate} onChange={(e) => setExtendModal({...extendModal, newEndDate: e.target.value})} className="w-full px-3 py-3 border border-slate-600 rounded-xl bg-slate-800 text-white font-bold focus:ring-2 focus:ring-violet-500 [color-scheme:dark] shadow-inner outline-none text-[16px] sm:text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Jam Kembali Baru</label>
+                        <select value={extendModal.newEndTime} onChange={(e) => setExtendModal({...extendModal, newEndTime: e.target.value})} className="w-full px-3 py-3 border border-slate-600 rounded-xl bg-slate-800 text-white font-bold focus:ring-2 focus:ring-violet-500 [color-scheme:dark] shadow-inner appearance-none cursor-pointer outline-none text-[16px] sm:text-sm">
+                          <option value="" disabled>Pilih Jam</option>
+                          {getOptionsWithFallback(extendModal.newEndTime).map(t => (<option key={t} value={t}>{t} WIB</option>))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const newDuration = (new Date(`${extendModal.newEndDate}T${extendModal.newEndTime}`) - new Date(`${extendModal.startDate}T${extendModal.startTime}`)) / (1000 * 60 * 60);
+                      const isCamera = extendModal.equipment.some(item => EQUIPMENT_CATEGORIES["Kamera"] && EQUIPMENT_CATEGORIES["Kamera"].includes(item));
+                      const has6DExt = extendModal.equipment.some(isCamera6D);
+                      const selectedPromoExt = extendModal.equipment.filter(e => e.includes("Lensa Fix STM 50mm f1.8 Canon") || e.includes("Lensa Tele Canon 75-300mm USM"));
+                      
+                      const newRawTotal = newDuration > 0 ? extendModal.equipment.reduce((sum, item) => {
+                          let price = getItemPrice(item, newDuration, isCamera, customPricing, dynamicPackages);
+                          const isPromoLens = item.includes("Lensa Fix STM 50mm f1.8 Canon") || item.includes("Lensa Tele Canon 75-300mm USM");
+                          if (has6DExt && isPromoLens && selectedPromoExt[0] === item) price = 0; 
+                          return sum + price;
+                      }, 0) : 0;
+                      
+                      const isNewThreeDays = newDuration >= 72;
+                      const newDiscount = isNewThreeDays ? newRawTotal * 0.10 : 0;
+                      const newTotal = newRawTotal - newDiscount;
+                      const additionalCost = newTotal - (extendModal.totalPrice || 0);
+
+                      return (
+                        <div className="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 mb-6 space-y-2">
+                          <div className="flex justify-between text-[16px] sm:text-sm"><span className="text-slate-400 font-bold">Harga Awal:</span><span className="text-slate-300 font-bold">{formatRupiah(extendModal.totalPrice || 0)}</span></div>
+                          {isNewThreeDays && (
+                             <div className="flex justify-between text-[16px] sm:text-sm text-emerald-400 font-bold">
+                               <span className="text-[10px] uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Diskon 3 Hari</span><span>-{formatRupiah(newDiscount)}</span>
+                             </div>
+                          )}
+                          <div className="flex justify-between text-[16px] sm:text-sm font-black border-t border-slate-700/50 pt-3 mt-2">
+                            <span className="text-slate-300 uppercase tracking-widest text-[11px]">Harga Baru:</span><span className="text-emerald-400 text-base">{formatRupiah(newTotal)}</span>
+                          </div>
+                          {additionalCost > 0 && (
+                            <div className="mt-4 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 text-center flex flex-col gap-1 shadow-inner">
+                              <span className="text-amber-500 font-black tracking-widest uppercase text-[9px]">Kurang Bayar / Tambahan:</span> <strong className="text-amber-400 text-xl">{formatRupiah(additionalCost)}</strong>
+                            </div>
+                          )}
+                          {additionalCost < 0 && (
+                            <div className="text-[16px] sm:text-xs text-sky-400 font-bold mt-3 bg-sky-900/20 p-3 rounded-xl border border-sky-700/30 text-center">Waktu dipersingkat (Kelebihan: {formatRupiah(Math.abs(additionalCost))})</div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    <div className="flex gap-3">
+                      <button onClick={() => setExtendModal(null)} className="flex-1 px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all border border-slate-600 active:scale-95 text-[16px] sm:text-sm uppercase tracking-wider">Batal</button>
+                      <button onClick={() => {
+                        const newDuration = (new Date(`${extendModal.newEndDate}T${extendModal.newEndTime}`) - new Date(`${extendModal.startDate}T${extendModal.startTime}`)) / (1000 * 60 * 60);
+                        if (newDuration <= 0) { alert("Waktu kembali baru tidak valid! Harus setelah waktu pengambilan."); return; }
+                        const isCamera = extendModal.equipment.some(item => EQUIPMENT_CATEGORIES["Kamera"] && EQUIPMENT_CATEGORIES["Kamera"].includes(item));
+                        const has6DExt = extendModal.equipment.some(isCamera6D);
+                        const selectedPromoExt = extendModal.equipment.filter(e => e.includes("Lensa Fix STM 50mm f1.8 Canon") || e.includes("Lensa Tele Canon 75-300mm USM"));
+                        
+                        const newRawTotal = extendModal.equipment.reduce((sum, item) => {
+                            let price = getItemPrice(item, newDuration, isCamera, customPricing, dynamicPackages);
+                            const isPromoLens = item.includes("Lensa Fix STM 50mm f1.8 Canon") || item.includes("Lensa Tele Canon 75-300mm USM");
+                            if (has6DExt && isPromoLens && selectedPromoExt[0] === item) price = 0; 
+                            return sum + price;
+                        }, 0);
+                        
+                        const isNewThreeDays = newDuration >= 72;
+                        const newDiscount = isNewThreeDays ? newRawTotal * 0.10 : 0;
+                        const newTotal = newRawTotal - newDiscount;
+                        
+                        const { newEndDate, newEndTime, ...bookingDataToUpdate } = extendModal;
+                        modifyData('UPDATE', { ...bookingDataToUpdate, endDate: extendModal.newEndDate, endTime: extendModal.newEndTime, totalPrice: newTotal });
+                        setExtendModal(null); setSuccess('Waktu sewa berhasil diperpanjang!'); setTimeout(() => setSuccess(''), 3000); window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }} className="flex-[2] px-4 py-3.5 bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-500 hover:to-purple-400 text-white rounded-xl font-black transition-all shadow-[0_4px_15px_rgba(139,92,246,0.3)] active:scale-95 text-[16px] sm:text-sm uppercase tracking-widest">Simpan</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {editPriceModal && (
+                <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md transition-opacity">
+                  <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-sm w-full p-5 sm:p-7 flex flex-col animate-slideUp pb-safe">
+                    <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-4 sm:hidden"></div>
+                    <h3 className="text-xl font-extrabold text-white mb-2 flex items-center gap-2">💰 Harga Kustom</h3>
+                    <p className="text-[16px] sm:text-sm text-slate-400 font-medium mb-5">Penyewa: <strong className="text-white">{editPriceModal.customerName}</strong></p>
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 mb-5 text-[16px] sm:text-sm shadow-inner">
+                      <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Harga Terkini Sistem:</div>
+                      <div className="text-white font-black text-lg">{formatRupiah(editPriceModal.totalPrice || 0)}</div>
+                    </div>
+                    <div className="mb-6">
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Nominal Harga Baru (Rp)</label>
+                      <input type="tel" value={editPriceModal.newPrice ? new Intl.NumberFormat('id-ID').format(editPriceModal.newPrice) : ''} onChange={(e) => setEditPriceModal({...editPriceModal, newPrice: e.target.value.replace(/\D/g, '')})} className="w-full p-4 border border-emerald-500/50 rounded-xl bg-slate-950 text-emerald-400 font-black text-2xl focus:ring-2 focus:ring-emerald-500 [color-scheme:dark] outline-none shadow-inner" placeholder="Cth: 150000" />
+                    </div>
+                    <div className="flex gap-3">
+                      <button onClick={() => setEditPriceModal(null)} className="flex-1 px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all border border-slate-600 active:scale-95 text-[16px] sm:text-sm uppercase tracking-wider">Batal</button>
+                      <button onClick={() => {
+                        const finalPrice = parseInt(editPriceModal.newPrice, 10) || 0;
+                        const { newPrice, ...bookingDataToUpdate } = editPriceModal;
+                        modifyData('UPDATE', { ...bookingDataToUpdate, totalPrice: finalPrice });
+                        setEditPriceModal(null); setSuccess('Harga khusus berhasil disimpan!'); setTimeout(() => setSuccess(''), 3000); window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }} className="flex-[2] px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white rounded-xl font-black transition-all shadow-[0_4px_15px_rgba(16,185,129,0.3)] active:scale-95 text-[16px] sm:text-sm uppercase tracking-widest">Terapkan</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {}
+              {showHolidayModal && !isClient && (
+                <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md transition-opacity">
+                  <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col animate-slideUp pb-safe">
+                    <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 sm:hidden shrink-0"></div>
+                    <div className="px-5 sm:px-6 pb-4 border-b border-slate-800 flex justify-between items-center shrink-0">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2"><span>🏖️</span> Jadwal Libur Sistem</h3>
+                      <button onClick={() => setShowHolidayModal(false)} className="text-slate-500 hover:text-white bg-slate-800 rounded-full p-1.5 transition-colors"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    </div>
+                    <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                      <div>
+                         <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-800 pb-2">Daftar Jadwal Libur Aktif</h4>
+                         {holidays.length === 0 ? (
+                             <div className="text-center p-6 bg-slate-800/30 rounded-2xl border border-slate-700/50 text-slate-500 font-bold text-sm">Belum ada jadwal libur yang diatur.</div>
+                         ) : (
+                             <div className="space-y-3">
+                                 {holidays.map(h => (
+                                     <div key={h.id} className="flex justify-between items-center bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                                         <div>
+                                             <div className="flex items-center gap-2 mb-1">
+                                                <span className={`text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-widest ${h.type === 'date' ? 'bg-sky-500/20 text-sky-400' : 'bg-violet-500/20 text-violet-400'}`}>{h.type === 'date' ? 'Tanggal' : 'Hari Rutin'}</span>
+                                                <span className="font-bold text-slate-200 text-sm">{h.type === 'date' ? formatDateDisplay(h.date).formattedDate : ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][parseInt(h.day)]}</span>
+                                             </div>
+                                             <div className="text-xs text-slate-400 font-medium mt-1">⏰ {h.start} - {h.end} WIB <span className="mx-1 text-slate-600">|</span> 📝 {h.note || '-'}</div>
+                                         </div>
+                                         <div className="flex gap-2">
+                                             <button onClick={() => setHolidayForm(h)} className="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 p-2 rounded-lg transition-colors" title="Edit">✏️</button>
+                                             <button onClick={() => { const newHolidays = holidays.filter(item => item.id !== h.id); setHolidays(newHolidays); modifyData('SETTING_UPDATE', { holidays: newHolidays }); }} className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 p-2 rounded-lg transition-colors" title="Hapus">🗑️</button>
+                                         </div>
+                                     </div>
+                                 ))}
+                             </div>
+                         )}
+                      </div>
+                      <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800">
+                         <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
+                             <h4 className="text-[11px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2"><span>{holidayForm.id ? '✏️' : '➕'}</span> {holidayForm.id ? 'Edit Jadwal Libur' : 'Tambah Jadwal Libur'}</h4>
+                             {holidayForm.id && <button onClick={() => setHolidayForm({ type: 'date', date: '', day: '0', start: '00:00', end: '23:59', note: '' })} className="text-[10px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-600 transition-colors">Batal Edit</button>}
+                         </div>
+                         <div className="space-y-4">
+                            <div className="flex gap-4">
+                                <label className={`flex-1 flex justify-center items-center gap-2 p-3 rounded-xl border cursor-pointer font-bold text-sm transition-colors ${holidayForm.type === 'date' ? 'bg-sky-500/20 border-sky-500/50 text-sky-400' : 'bg-slate-900 border-slate-700 text-slate-400'}`}>
+                                    <input type="radio" name="hType" className="hidden" checked={holidayForm.type === 'date'} onChange={() => setHolidayForm({...holidayForm, type: 'date'})}/>📅 Tanggal Spesifik
+                                </label>
+                                <label className={`flex-1 flex justify-center items-center gap-2 p-3 rounded-xl border cursor-pointer font-bold text-sm transition-colors ${holidayForm.type === 'day' ? 'bg-violet-500/20 border-violet-500/50 text-violet-400' : 'bg-slate-900 border-slate-700 text-slate-400'}`}>
+                                    <input type="radio" name="hType" className="hidden" checked={holidayForm.type === 'day'} onChange={() => setHolidayForm({...holidayForm, type: 'day'})}/>🔄 Hari Rutin
+                                </label>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                {holidayForm.type === 'date' ? (
+                                    <div className="col-span-2">
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-1">Pilih Tanggal</label>
+                                        <input type="date" value={holidayForm.date} onChange={(e) => setHolidayForm({...holidayForm, date: e.target.value})} className="w-full bg-slate-800 text-white font-bold p-3 rounded-xl border border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none [color-scheme:dark]" />
+                                    </div>
+                                ) : (
+                                    <div className="col-span-2">
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-1">Pilih Hari</label>
+                                        <select value={holidayForm.day} onChange={(e) => setHolidayForm({...holidayForm, day: e.target.value})} className="w-full bg-slate-800 text-white font-bold p-3 rounded-xl border border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none appearance-none cursor-pointer">
+                                            <option value="1">Senin</option><option value="2">Selasa</option><option value="3">Rabu</option><option value="4">Kamis</option><option value="5">Jumat</option><option value="6">Sabtu</option><option value="0">Minggu</option>
+                                        </select>
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-1">Jam Mulai</label>
+                                    <input type="time" value={holidayForm.start} onChange={(e) => setHolidayForm({...holidayForm, start: e.target.value})} className="w-full bg-slate-800 text-white font-bold p-3 rounded-xl border border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none [color-scheme:dark]" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-1">Jam Selesai</label>
+                                    <input type="time" value={holidayForm.end} onChange={(e) => setHolidayForm({...holidayForm, end: e.target.value})} className="w-full bg-slate-800 text-white font-bold p-3 rounded-xl border border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none [color-scheme:dark]" />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-1">Keterangan / Alasan (Muncul ke user)</label>
+                                    <input type="text" placeholder="Cth: Libur Idul Fitri / Tutup Awal" value={holidayForm.note} onChange={(e) => setHolidayForm({...holidayForm, note: e.target.value})} className="w-full bg-slate-800 text-white font-bold p-3 rounded-xl border border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none placeholder-slate-500" />
+                                </div>
+                            </div>
+                            <button onClick={() => {
+                                if (holidayForm.type === 'date' && !holidayForm.date) return alert("Pilih tanggal terlebih dahulu");
+                                if (!holidayForm.start || !holidayForm.end) return alert("Tentukan jam mulai dan jam selesai");
+                                
+                                let newHolidays;
+                                if (holidayForm.id) {
+                                    newHolidays = holidays.map(h => h.id === holidayForm.id ? holidayForm : h);
+                                } else {
+                                    newHolidays = [...holidays, { ...holidayForm, id: Date.now().toString() }];
+                                }
+                                
+                                setHolidays(newHolidays); modifyData('SETTING_UPDATE', { holidays: newHolidays });
+                                setHolidayForm({ type: 'date', date: '', day: '0', start: '00:00', end: '23:59', note: '' });
+                            }} className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl uppercase tracking-widest text-sm transition-all shadow-md mt-2">{holidayForm.id ? 'Simpan Perubahan' : 'Simpan Jadwal Baru'}</button>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {showPriceSettings && !isClient && (
+                <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md transition-opacity">
+                  <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col animate-slideUp pb-safe">
+                    <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 sm:hidden shrink-0"></div>
+                    <div className="px-5 sm:px-6 pb-4 border-b border-slate-800 flex justify-between items-center shrink-0">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2"><span>⚙️</span> Editor Harga Alat</h3>
+                      <button onClick={() => setShowPriceSettings(false)} className="text-slate-500 hover:text-white bg-slate-800 rounded-full p-1.5 transition-colors"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    </div>
+                    
+                    <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-8 bg-slate-950/30">
+                       <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex gap-3 shadow-inner">
+                           <span className="text-xl mt-0.5">💡</span>
+                           <p className="text-emerald-100/80 text-[11px] sm:text-xs font-medium leading-relaxed">
+                               Ubah harga sewa alat di bawah ini. Untuk mengubah Harga Paket Jasa Fotografer, silakan gunakan fitur Edit di menu Katalog. Anda juga dapat menambah alat baru atau menghapus alat yang sudah tidak disewakan.
+                           </p>
+                       </div>
+
+                       <div>
+                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-700 pb-2 mb-4 gap-3">
+                               <h4 className="text-sm font-black text-emerald-400 uppercase tracking-widest">Sewa Alat (Kamera, Lensa, Aksesoris)</h4>
+                               <button onClick={() => setAddEquipmentModal({})} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors flex items-center gap-1.5">
+                                   <span>➕</span> Tambah Alat
+                               </button>
+                           </div>
+                           <div className="space-y-6">
+                               {Object.entries(dynamicEquipment).map(([category, items]) => (
+                                   <div key={category} className="space-y-4">
+                                       <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-2">{category}</h5>
+                                       {items.map(item => (
+                                           <div key={item} className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 relative group overflow-hidden">
+                                               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1.5 z-10">
+                                                   <button onClick={(e) => { e.preventDefault(); handleDeleteEquipment(category, item); }} className="bg-rose-500/90 hover:bg-rose-400 text-white p-2 rounded-lg shadow-md transition-all active:scale-95" title="Hapus Alat">🗑️</button>
+                                               </div>
+                                               <span className="block font-bold text-slate-200 mb-3 text-[15px] sm:text-sm pr-16">{item}</span>
+                                               <div className="grid grid-cols-4 gap-2 relative z-0">
+                                                   {[4, 6, 12, 24].map(hours => (
+                                                       <div key={hours}>
+                                                           <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{hours} Jam (Rp)</label>
+                                                           <input type="number" 
+                                                               value={priceForm[item]?.[hours] !== undefined ? priceForm[item][hours] : (customPricing[item]?.[hours] || DEFAULT_PRICING[item]?.[hours] || 0)}
+                                                               onChange={(e) => {
+                                                                   const val = parseInt(e.target.value) || 0;
+                                                                   const currentPrices = priceForm[item] || customPricing[item] || DEFAULT_PRICING[item] || { 4:0, 6:0, 12:0, 24:0 };
+                                                                   setPriceForm(prev => ({ ...prev, [item]: { ...currentPrices, [hours]: val } }));
+                                                               }}
+                                                               className="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-white text-xs font-bold focus:ring-1 focus:ring-emerald-500 outline-none text-center"
+                                                           />
+                                                       </div>
+                                                   ))}
+                                               </div>
+                                           </div>
+                                       ))}
+                                   </div>
+                               ))}
+                           </div>
+                       </div>
+                    </div>
+
+                    <div className="p-5 sm:p-6 border-t border-slate-800 flex gap-3 shrink-0">
+                      <button onClick={() => setShowPriceSettings(false)} className="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all border border-slate-600 active:scale-95">Batal</button>
+                      <button onClick={() => {
+                          setCustomPricing(priceForm);
+                          modifyData('SETTING_UPDATE', { customPricing: priceForm });
+                          setShowPriceSettings(false);
+                          setSuccess('Harga Sistem Berhasil Diperbarui!');
+                          setTimeout(() => setSuccess(''), 3000);
+                      }} className="flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white rounded-xl font-black transition-all shadow-[0_4px_15px_rgba(16,185,129,0.3)] active:scale-95 text-[16px] sm:text-sm uppercase tracking-widest">Simpan Semua Harga Alat</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* MODAL EDIT NAMA ALAT (RENAME) - REMOVED */}
+
+              {/* MODAL TAMBAH ALAT BARU */}
+              {addEquipmentModal && !isClient && (
+                  <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 backdrop-blur-sm transition-opacity">
+                      <div className="bg-slate-900 border-t sm:border border-slate-700 rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col animate-slideUp pb-safe">
+                          <div className="px-5 sm:px-6 py-4 border-b border-slate-800 flex justify-between items-center shrink-0">
+                              <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
+                                  <span>➕</span> Tambah Alat Baru
+                              </h3>
+                              <button onClick={() => setAddEquipmentModal(null)} className="text-slate-500 hover:text-white bg-slate-800 rounded-full p-1.5 transition-colors"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                          </div>
+                          
+                          <form onSubmit={handleAddEquipment} className="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+                              <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Kategori Alat</label>
+                                  <div className="relative">
+                                      <select name="category" required className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm text-white font-bold outline-none appearance-none">
+                                          <option value="Kamera">Kamera</option>
+                                          <option value="Lensa">Lensa</option>
+                                          <option value="Aksesoris">Aksesoris</option>
+                                      </select>
+                                      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-emerald-500">▼</div>
+                                  </div>
+                              </div>
+                              <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Nama Alat</label>
+                                  <input type="text" name="name" required placeholder="Contoh: Sony A7III" className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm text-white outline-none" />
+                                  <p className="text-[10px] text-amber-400 font-bold mt-1 pl-1 flex gap-1"><span>⚠️</span> Nama harus unik dan tidak boleh sama dengan alat yang sudah ada.</p>
+                              </div>
+                              
+                              <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mt-2 space-y-3">
+                                  <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-700/50 pb-2">Pengaturan Harga Sewa</span>
+                                  <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                          <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">4 Jam (Rp)</label>
+                                          <input type="number" name="p4" required placeholder="0" className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 text-xs font-bold text-white outline-none text-right" />
+                                      </div>
+                                      <div>
+                                          <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">6 Jam (Rp)</label>
+                                          <input type="number" name="p6" required placeholder="0" className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 text-xs font-bold text-white outline-none text-right" />
+                                      </div>
+                                      <div>
+                                          <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">12 Jam (Rp)</label>
+                                          <input type="number" name="p12" required placeholder="0" className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 text-xs font-bold text-white outline-none text-right" />
+                                      </div>
+                                      <div>
+                                          <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">24 Jam (Rp)</label>
+                                          <input type="number" name="p24" required placeholder="0" className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 text-xs font-bold text-white outline-none text-right" />
+                                      </div>
+                                  </div>
+                              </div>
+
+                              <button type="submit" className="w-full py-4 mt-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black uppercase tracking-widest text-sm shadow-md transition-colors flex items-center justify-center gap-2">
+                                  <span>💾</span> Simpan Alat Baru
+                              </button>
+                          </form>
+                      </div>
+                  </div>
+              )}
+              
             </div>
           );
         }
